@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase, Decision } from '@/lib/supabase'
 import { motion } from 'framer-motion'
 
@@ -11,6 +11,7 @@ interface DecisionHistoryProps {
 export default function DecisionHistory({ userId }: DecisionHistoryProps) {
   const [decisions, setDecisions] = useState<Decision[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [stats, setStats] = useState({
     totalDecisions: 0,
     totalTimeSaved: 0,
@@ -20,8 +21,10 @@ export default function DecisionHistory({ userId }: DecisionHistoryProps) {
     pendingDecisions: 0
   })
 
-  const fetchDecisions = async () => {
+
+  const fetchDecisionsCallback = useCallback(async () => {
     try {
+      setError(null)
       const { data, error } = await supabase
         .from('decisions')
         .select('*')
@@ -34,14 +37,15 @@ export default function DecisionHistory({ userId }: DecisionHistoryProps) {
       calculateStats(data || [])
     } catch (error) {
       console.error('Error fetching decisions:', error)
+      setError(error instanceof Error ? error.message : 'Failed to load decisions')
     } finally {
       setLoading(false)
     }
-  }
+  }, [userId])
 
   useEffect(() => {
-    fetchDecisions()
-  }, [fetchDecisions])
+    fetchDecisionsCallback()
+  }, [fetchDecisionsCallback])
 
   const calculateStats = (decisions: Decision[]) => {
     const totalDecisions = decisions.length
@@ -71,9 +75,27 @@ export default function DecisionHistory({ userId }: DecisionHistoryProps) {
 
       if (error) throw error
       
-      fetchDecisions() // Refresh data
+      // Optimistically update the UI
+      setDecisions(prev => prev.map(decision => 
+        decision.id === decisionId 
+          ? { ...decision, outcome }
+          : decision
+      ))
+      
+      // Recalculate stats with updated data
+      const updatedDecisions = decisions.map(decision => 
+        decision.id === decisionId 
+          ? { ...decision, outcome }
+          : decision
+      )
+      calculateStats(updatedDecisions)
+      
     } catch (error) {
       console.error('Error updating decision outcome:', error)
+      setError('Failed to update decision outcome')
+      
+      // Refresh data on error to ensure consistency
+      fetchDecisionsCallback()
     }
   }
 
@@ -95,6 +117,28 @@ export default function DecisionHistory({ userId }: DecisionHistoryProps) {
     return (
       <div className="flex justify-center items-center py-12">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-6xl mx-auto p-6">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+          <div className="text-4xl mb-4">⚠️</div>
+          <h2 className="text-xl font-semibold text-red-800 mb-2">Error Loading History</h2>
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={() => {
+              setError(null)
+              setLoading(true)
+              fetchDecisionsCallback()
+            }}
+            className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     )
   }

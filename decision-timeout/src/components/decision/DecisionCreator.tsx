@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useForm } from 'react-hook-form'
-import { supabase } from '@/lib/supabase'
+import { supabase, Decision } from '@/lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
+import { ToastContainer, ToastMessage } from '@/components/Toast'
 
 interface DecisionForm {
   question: string
@@ -12,7 +13,21 @@ interface DecisionForm {
 
 interface DecisionCreatorProps {
   userId: string
-  onDecisionComplete: (decision: unknown) => void
+  onDecisionComplete: (decision: Decision) => void
+}
+
+function generateId() {
+  return Math.random().toString(36).substring(2) + Date.now().toString(36)
+}
+
+interface TimerState {
+  isActive: boolean
+  timeRemaining: number
+  question: string
+  pros: string[]
+  cons: string[]
+  timerMinutes: number
+  startTime: number
 }
 
 export default function DecisionCreator({ userId, onDecisionComplete }: DecisionCreatorProps) {
@@ -24,19 +39,92 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
   const [timeRemaining, setTimeRemaining] = useState(0)
   const [decisionResult, setDecisionResult] = useState<'YES' | 'NO' | null>(null)
   const [showResult, setShowResult] = useState(false)
+  const [toasts, setToasts] = useState<ToastMessage[]>([])
+  const [isLoading, setIsLoading] = useState(false)
 
-  const { register, handleSubmit, formState: { errors }, getValues } = useForm<DecisionForm>({
+  const { register, handleSubmit, formState: { errors }, getValues, setValue } = useForm<DecisionForm>({
     defaultValues: {
       timerMinutes: 10
     }
   })
 
-  const makeAutoDecision = () => {
+  // Load persisted timer state on component mount
+  useEffect(() => {
+    const savedState = localStorage.getItem(`decision-timer-${userId}`)
+    if (savedState) {
+      try {
+        const timerState: TimerState = JSON.parse(savedState)
+        const now = Date.now()
+        const elapsed = Math.floor((now - timerState.startTime) / 1000)
+        const remaining = Math.max(0, timerState.timeRemaining - elapsed)
+        
+        if (remaining > 0 && timerState.isActive) {
+          // Restore state
+          setValue('question', timerState.question)
+          setValue('timerMinutes', timerState.timerMinutes)
+          setPros(timerState.pros)
+          setCons(timerState.cons)
+          setTimeRemaining(remaining)
+          setIsTimerActive(true)
+        } else if (timerState.isActive) {
+          // Timer expired while away, make auto decision
+          setPros(timerState.pros)
+          setCons(timerState.cons)
+          setValue('question', timerState.question)
+          setValue('timerMinutes', timerState.timerMinutes)
+          makeAutoDecision()
+          localStorage.removeItem(`decision-timer-${userId}`)
+        }
+      } catch (error) {
+        console.error('Error loading timer state:', error)
+        localStorage.removeItem(`decision-timer-${userId}`)
+      }
+    }
+  }, [userId, setValue, makeAutoDecision])
+
+  // Save timer state to localStorage
+  const saveTimerState = useCallback(() => {
+    if (isTimerActive) {
+      const timerState: TimerState = {
+        isActive: isTimerActive,
+        timeRemaining,
+        question: getValues('question'),
+        pros,
+        cons,
+        timerMinutes: getValues('timerMinutes'),
+        startTime: Date.now() - (getValues('timerMinutes') * 60 - timeRemaining) * 1000
+      }
+      localStorage.setItem(`decision-timer-${userId}`, JSON.stringify(timerState))
+    } else {
+      localStorage.removeItem(`decision-timer-${userId}`)
+    }
+  }, [isTimerActive, timeRemaining, pros, cons, getValues, userId])
+
+  // Save state whenever relevant data changes
+  useEffect(() => {
+    saveTimerState()
+  }, [saveTimerState])
+
+  const currentProsRef = useRef(pros)
+  const currentConsRef = useRef(cons)
+  
+  // Update refs when pros/cons change
+  useEffect(() => {
+    currentProsRef.current = pros
+  }, [pros])
+  
+  useEffect(() => {
+    currentConsRef.current = cons
+  }, [cons])
+
+  const makeAutoDecision = useCallback(() => {
+    const currentPros = currentProsRef.current
+    const currentCons = currentConsRef.current
     let result: 'YES' | 'NO'
     
-    if (pros.length > cons.length) {
+    if (currentPros.length > currentCons.length) {
       result = 'YES'
-    } else if (cons.length > pros.length) {
+    } else if (currentCons.length > currentPros.length) {
       result = 'NO'
     } else {
       // Coin flip for tie
@@ -46,8 +134,9 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
     setDecisionResult(result)
     setShowResult(true)
     setIsTimerActive(false)
+    localStorage.removeItem(`decision-timer-${userId}`) // Clear saved state
     saveDecision(result)
-  }
+  }, [userId, saveDecision])
 
   useEffect(() => {
     let interval: NodeJS.Timeout
@@ -63,7 +152,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
       }, 1000)
     }
     return () => clearInterval(interval)
-  }, [isTimerActive, timeRemaining, pros.length, cons.length])
+  }, [isTimerActive, timeRemaining, makeAutoDecision])
 
   const addPro = () => {
     if (currentPro.trim() && pros.length < 5) {
@@ -91,10 +180,21 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
     }
   }
 
-  const saveDecision = async (result: 'YES' | 'NO') => {
+  const addToast = useCallback((toast: Omit<ToastMessage, 'id'>) => {
+    const newToast = { ...toast, id: generateId() }
+    setToasts(prev => [...prev, newToast])
+  }, [])
+
+  const removeToast = useCallback((id: string) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id))
+  }, [])
+
+  const saveDecision = useCallback(async (result: 'YES' | 'NO') => {
     const { question, timerMinutes } = getValues()
     const lockedUntil = new Date()
     lockedUntil.setDate(lockedUntil.getDate() + 30)
+
+    setIsLoading(true)
 
     try {
       const { data, error } = await supabase
@@ -102,8 +202,8 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
         .insert({
           user_id: userId,
           question,
-          pros,
-          cons,
+          pros: currentProsRef.current,
+          cons: currentConsRef.current,
           result,
           locked_until: lockedUntil.toISOString(),
           time_saved: timerMinutes
@@ -112,20 +212,60 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
         .single()
 
       if (error) throw error
-      onDecisionComplete(data)
+      
+      addToast({
+        type: 'success',
+        title: 'Decision Saved!',
+        description: `Your decision "${result}" has been locked for 30 days.`
+      })
+      
+      onDecisionComplete(data as Decision)
     } catch (error) {
       console.error('Error saving decision:', error)
+      addToast({
+        type: 'error',
+        title: 'Failed to Save Decision',
+        description: error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.',
+        duration: 7000
+      })
+      
+      // Reset UI state so user can try again
+      setDecisionResult(null)
+      setShowResult(false)
+      setIsTimerActive(false)
+    } finally {
+      setIsLoading(false)
     }
-  }
+  }, [userId, getValues, onDecisionComplete, addToast])
 
   const startTimer = (data: DecisionForm) => {
     if (pros.length === 0 && cons.length === 0) {
-      alert('Add at least one pro or con before starting the timer!')
+      addToast({
+        type: 'warning',
+        title: 'Add Pros or Cons',
+        description: 'Add at least one pro or con before starting the timer!'
+      })
+      return
+    }
+    
+    if (!data.question.trim()) {
+      addToast({
+        type: 'warning',
+        title: 'Question Required',
+        description: 'Please enter a question before starting the timer.'
+      })
       return
     }
     
     setTimeRemaining(data.timerMinutes * 60)
     setIsTimerActive(true)
+    
+    addToast({
+      type: 'info',
+      title: 'Timer Started!',
+      description: `You have ${data.timerMinutes} minutes to decide.`,
+      duration: 3000
+    })
   }
 
   const formatTime = (seconds: number) => {
@@ -168,23 +308,43 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <form onSubmit={handleSubmit(startTimer)} className="space-y-6">
+    <>
+      <ToastContainer toasts={toasts} onClose={removeToast} />
+      <motion.div 
+        className="max-w-2xl mx-auto p-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+      <form onSubmit={handleSubmit(startTimer)} className="space-y-8">
         {/* Question Input */}
-        <div>
-          <label className="block text-lg font-semibold mb-2">
-            What decision do you need to make?
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <label className="block text-lg font-semibold mb-3 text-gray-800">
+            🤔 What decision do you need to make?
           </label>
           <input
             {...register('question', { required: 'Question is required' })}
             disabled={isTimerActive}
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-lg disabled:bg-gray-100"
+            className="w-full px-4 py-4 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 outline-none text-lg disabled:bg-gray-100 transition-all duration-200 shadow-sm hover:shadow-md"
             placeholder="Should I build this feature?"
           />
-          {errors.question && (
-            <p className="text-red-500 mt-1">{errors.question.message}</p>
-          )}
-        </div>
+          <AnimatePresence>
+            {errors.question && (
+              <motion.p 
+                className="text-red-500 mt-2 text-sm"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+              >
+                {errors.question.message}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </motion.div>
 
         {/* Timer Display */}
         {isTimerActive && (
@@ -212,7 +372,12 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
               disabled={isTimerActive || pros.length >= 5}
               className="flex-1 px-3 py-2 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none disabled:bg-gray-100"
               placeholder="Add a pro..."
-              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addPro())}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  addPro()
+                }
+              }}
             />
             <button
               type="button"
@@ -262,7 +427,12 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
               disabled={isTimerActive || cons.length >= 5}
               className="flex-1 px-3 py-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none disabled:bg-gray-100"
               placeholder="Add a con..."
-              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCon())}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  addCon()
+                }
+              }}
             />
             <button
               type="button"
@@ -301,32 +471,101 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
         </div>
 
         {/* Timer Selection */}
-        {!isTimerActive && (
-          <div>
-            <label className="block text-lg font-semibold mb-2">
-              Decision Timer
-            </label>
-            <select
-              {...register('timerMinutes')}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+        <AnimatePresence>
+          {!isTimerActive && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ delay: 0.4 }}
             >
-              <option value={5}>5 minutes</option>
-              <option value={10}>10 minutes</option>
-              <option value={15}>15 minutes</option>
-            </select>
-          </div>
-        )}
+              <label className="block text-lg font-semibold mb-3 text-gray-800">
+                ⏱️ Decision Timer
+              </label>
+              <select
+                {...register('timerMinutes')}
+                className="w-full px-4 py-4 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 outline-none text-lg bg-white shadow-sm hover:shadow-md transition-all duration-200"
+              >
+                <option value={5}>5 minutes - Quick decisions</option>
+                <option value={10}>10 minutes - Balanced thinking</option>
+                <option value={15}>15 minutes - Deep consideration</option>
+              </select>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Start Button */}
-        {!isTimerActive && (
+        {/* Action Buttons */}
+        {!isTimerActive ? (
           <button
             type="submit"
             className="w-full bg-blue-600 text-white py-4 rounded-lg text-xl font-semibold hover:bg-blue-700 transition-colors"
           >
             Start Decision Timer
           </button>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-center text-gray-600">Timer is running. You can make a decision now or wait for auto-decision.</p>
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={() => {
+                  makeAutoDecision()
+                }}
+                className="flex-1 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors"
+              >
+                Decide YES Now
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setDecisionResult('NO')
+                  setShowResult(true)
+                  setIsTimerActive(false)
+                  saveDecision('NO')
+                }}
+                className="flex-1 bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors"
+              >
+                Decide NO Now
+              </button>
+            </div>
+          </div>
         )}
       </form>
+      
+      {isLoading && (
+        <motion.div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div 
+            className="bg-white/90 backdrop-blur-lg rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl"
+            initial={{ scale: 0.8, y: 50 }}
+            animate={{ scale: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          >
+            <motion.div 
+              className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            />
+            <div className="text-center">
+              <motion.p 
+                className="text-xl font-semibold text-gray-800 mb-1"
+                animate={{ opacity: [1, 0.7, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
+                Saving Decision
+              </motion.p>
+              <p className="text-sm text-gray-600">
+                Locking your choice for 30 days...
+              </p>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
+    </>
   )
 }
