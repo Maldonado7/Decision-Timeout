@@ -276,6 +276,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
       result = Math.random() < 0.5 ? 'YES' : 'NO'
     }
     
+    console.log('AUTO-DECISION made:', result, 'Pros:', currentPros.length, 'Cons:', currentCons.length)
     setDecisionResult(result)
     setShowConfidenceRating(true)
     setIsTimerActive(false)
@@ -319,6 +320,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
   }
 
   const handleConfidenceSubmit = (confidence: number) => {
+    console.log('Submitting confidence:', confidence, 'for decision:', decisionResult)
     setConfidenceLevel(confidence)
     setShowConfidenceRating(false)
     setShowResult(true)
@@ -327,56 +329,86 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
     }
   }
 
-  // Confidence Rating Screen - Compact Version
+  // Confidence Rating Screen - Improved UX Version
   if (showConfidenceRating && decisionResult) {
     console.log('Showing confidence screen for decision:', decisionResult)
     
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="max-w-sm mx-auto text-center py-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-lg mx-auto text-center py-6"
       >
-        <div className="bg-white/95 backdrop-blur-lg rounded-2xl p-5 shadow-xl border border-white/20">
-          {/* Compact Header */}
-          <div className="mb-4">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <span className="text-2xl">{decisionResult === 'YES' ? '🚀' : '🛡️'}</span>
-              <span className="text-lg font-bold text-gray-800">
-                Your Choice: <span className={`px-2 py-1 rounded-lg text-white ${decisionResult === 'YES' ? 'bg-green-500' : 'bg-red-500'}`}>
-                  {decisionResult}
-                </span>
-              </span>
+        <div className="bg-white/95 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-white/20">
+          {/* Clear Decision Display */}
+          <motion.div 
+            className="mb-6"
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="text-4xl mb-3">{decisionResult === 'YES' ? '🚀' : '🛡️'}</div>
+            <div className="text-2xl font-bold text-gray-800 mb-2">
+              Your Decision: 
             </div>
-            <p className="text-sm text-gray-600">Rate your confidence (1-10)</p>
-          </div>
+            <div className={`inline-block px-6 py-2 rounded-full text-xl font-black text-white shadow-lg ${
+              decisionResult === 'YES' ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gradient-to-r from-red-500 to-rose-500'
+            }`}>
+              {decisionResult}
+            </div>
+          </motion.div>
 
-          {/* Simplified Confidence Scale */}
-          <div className="mb-3">
-            <div className="grid grid-cols-5 gap-2">
-              {[
-                { range: [1, 2], label: '1-2', color: 'bg-red-500', desc: 'Very Low' },
-                { range: [3, 4], label: '3-4', color: 'bg-orange-400', desc: 'Low' },
-                { range: [5, 6], label: '5-6', color: 'bg-yellow-400', desc: 'Medium' },
-                { range: [7, 8], label: '7-8', color: 'bg-green-400', desc: 'High' },
-                { range: [9, 10], label: '9-10', color: 'bg-green-600', desc: 'Very High' }
-              ].map((group, index) => (
+          {/* Improved Confidence Scale */}
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              How confident do you feel about this choice?
+            </h3>
+            
+            {/* Labels */}
+            <div className="flex justify-between text-sm text-gray-600 mb-3 px-2">
+              <span>Not Confident</span>
+              <span>Very Confident</span>
+            </div>
+            
+            {/* Confidence Buttons */}
+            <div className="grid grid-cols-10 gap-2">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
                 <motion.button
-                  key={index}
-                  onClick={() => handleConfidenceSubmit(group.range[1])} // Use the higher value
-                  className={`${group.color} hover:opacity-80 text-white font-bold py-3 rounded-xl text-sm transition-all duration-200 shadow-md hover:shadow-lg`}
-                  whileHover={{ scale: 1.05 }}
+                  key={rating}
+                  onClick={() => handleConfidenceSubmit(rating)}
+                  className={`h-14 rounded-xl font-bold text-white text-lg transition-all duration-300 shadow-md hover:shadow-xl ${
+                    rating <= 2 
+                      ? 'bg-gradient-to-b from-red-400 to-red-500 hover:from-red-500 hover:to-red-600' 
+                      : rating <= 4
+                      ? 'bg-gradient-to-b from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600'
+                      : rating <= 6
+                      ? 'bg-gradient-to-b from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600'
+                      : rating <= 8
+                      ? 'bg-gradient-to-b from-green-400 to-green-500 hover:from-green-500 hover:to-green-600'
+                      : 'bg-gradient-to-b from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700'
+                  }`}
+                  whileHover={{ scale: 1.1, y: -2 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <div>{group.label}</div>
-                  <div className="text-xs opacity-90">{group.desc}</div>
+                  {rating}
                 </motion.button>
               ))}
             </div>
+            
+            {/* Helper Text */}
+            <div className="mt-4 text-sm text-gray-500">
+              <div className="grid grid-cols-5 gap-2 text-xs">
+                <span>Very Low</span>
+                <span>Low</span>
+                <span>Medium</span>
+                <span>High</span>
+                <span>Very High</span>
+              </div>
+            </div>
           </div>
           
-          <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-2">
-            💡 Quick confidence rating
+          <div className="text-sm text-indigo-600 bg-indigo-50 rounded-xl p-3 border border-indigo-100">
+            💡 This helps you understand your decision-making patterns over time
           </div>
         </div>
       </motion.div>
