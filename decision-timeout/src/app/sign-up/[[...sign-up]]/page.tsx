@@ -1,3 +1,5 @@
+'use client'
+
 import { SignUp } from '@clerk/nextjs'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
