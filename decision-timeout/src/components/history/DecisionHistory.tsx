@@ -27,6 +27,10 @@ export default function DecisionHistory({ userId }: DecisionHistoryProps) {
       setError(null)
       console.log('Fetching decisions for user:', userId)
       
+      // First, test basic connection to Supabase
+      const connectionTest = await supabase.from('decisions').select('count(*)', { count: 'exact', head: true })
+      console.log('Supabase connection test:', connectionTest)
+      
       const { data, error } = await supabase
         .from('decisions')
         .select('*')
