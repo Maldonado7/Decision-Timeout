@@ -190,8 +190,8 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
           cons: currentConsRef.current,
           result,
           locked_until: lockedUntil.toISOString(),
-          time_saved: timerMinutes,
-          confidence_level: confidenceLevel
+          time_saved: timerMinutes
+          // TODO: Add confidence_level: confidenceLevel after running the migration
         })
         .select()
         .single()
