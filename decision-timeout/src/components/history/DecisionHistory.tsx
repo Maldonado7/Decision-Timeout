@@ -47,7 +47,7 @@ export default function DecisionHistory({ userId }: DecisionHistoryProps) {
     } catch (error) {
       console.error('Error fetching decisions:', error)
       
-      // Better error message extraction for Supabase (same pattern as DecisionCreator)
+      // Better error message extraction for Supabase
       let errorMessage = 'Failed to load decisions. Please try again.'
       
       if (error && typeof error === 'object') {
@@ -65,12 +65,25 @@ export default function DecisionHistory({ userId }: DecisionHistoryProps) {
           // PostgreSQL error codes
           errorMessage = `Database error (${error.code}): ${error.message || 'Please check your connection'}`
         } else {
-          // Last resort - but make it user-friendly
+          // Handle the common {} error - likely table doesn't exist or no permissions
           const errorStr = JSON.stringify(error)
-          errorMessage = errorStr === '{}' ? 'Connection issue - please try refreshing the page' : `Error: ${errorStr}`
+          if (errorStr === '{}') {
+            errorMessage = 'Database setup required'
+          } else {
+            errorMessage = `Error: ${errorStr}`
+          }
         }
       } else if (typeof error === 'string') {
         errorMessage = error
+      }
+      
+      // If it's a database setup issue, set error to null and show empty state instead
+      if (errorMessage.includes('Database setup required') || errorMessage.includes('Connection issue')) {
+        console.log('Database not set up yet, showing empty state instead of error')
+        setError(null)
+        setDecisions([])
+        calculateStats([])
+        return
       }
       
       setError(errorMessage)
@@ -196,17 +209,37 @@ export default function DecisionHistory({ userId }: DecisionHistoryProps) {
             Your decision history will appear here once you start making choices with Decision Timeout. 
             Ready to beat analysis paralysis?
           </p>
-          <motion.a
-            href="/dashboard"
-            className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-xl hover:shadow-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <span className="text-2xl">🚀</span>
-            Make Your First Decision
-          </motion.a>
-          <div className="mt-8 text-sm text-gray-500 bg-gray-50 rounded-lg p-4">
-            💡 Tip: Each decision you make will be tracked here with outcomes, time saved, and success patterns
+          
+          <div className="space-y-4">
+            <motion.a
+              href="/dashboard"
+              className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-xl hover:shadow-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <span className="text-2xl">🚀</span>
+              Make Your First Decision
+            </motion.a>
+            
+            <motion.a
+              href="/demo"
+              className="inline-flex items-center gap-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-xl hover:shadow-2xl hover:from-yellow-600 hover:to-orange-600 transition-all duration-300"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <span className="text-2xl">🛠️</span>
+              Try Demo Mode
+            </motion.a>
+          </div>
+          
+          <div className="mt-8 space-y-3">
+            <div className="text-sm text-gray-500 bg-gray-50 rounded-lg p-4">
+              💡 Tip: Each decision you make will be tracked here with outcomes, time saved, and success patterns
+            </div>
+            
+            <div className="text-sm text-yellow-700 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+              🚧 If decisions aren't saving, you may need to run the database setup script. Check QUICK_FIX_README.md for instructions.
+            </div>
           </div>
         </motion.div>
       </div>
