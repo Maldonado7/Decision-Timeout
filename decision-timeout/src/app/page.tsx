@@ -24,23 +24,18 @@ export default async function Home() {
                 <p className="mt-3 text-base text-gray-600 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0 leading-relaxed">
                   Stop overthinking. Make decisions fast. Combat analysis paralysis with forced time limits that auto-decide when you can&apos;t.
                 </p>
-                <div className="mt-5 sm:mt-8 space-y-3 sm:space-y-0 sm:space-x-3 sm:flex sm:justify-center lg:justify-start">
-                  <div className="rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200">
-                    <Link
-                      href="/sign-up"
-                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 md:py-4 md:text-lg md:px-10 transition-all duration-200 shadow-lg hover:shadow-xl"
-                    >
-                      🚀 Sign Up & Start Deciding
-                    </Link>
-                  </div>
-                  <div className="rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200">
+                <div className="mt-5 sm:mt-8">
+                  <div className="rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 max-w-sm mx-auto lg:mx-0">
                     <Link
                       href="/sign-in"
-                      className="w-full flex items-center justify-center px-8 py-3 border border-gray-200 text-base font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10 transition-all duration-200 shadow-lg hover:shadow-xl hover:border-gray-300"
+                      className="w-full flex items-center justify-center px-10 py-4 border border-transparent text-lg font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 md:py-5 md:text-xl md:px-12 transition-all duration-300 transform hover:scale-105"
                     >
-                      👋 Sign In
+                      🚀 Get Started
                     </Link>
                   </div>
+                  <p className="mt-3 text-sm text-gray-500 text-center lg:text-left">
+                    New user? You&apos;ll be able to sign up on the next page
+                  </p>
                 </div>
                 <p className="mt-6 text-sm text-gray-500 text-center lg:text-left max-w-md flex items-center justify-center lg:justify-start gap-2 flex-wrap">
                   <span className="inline-flex items-center gap-1">

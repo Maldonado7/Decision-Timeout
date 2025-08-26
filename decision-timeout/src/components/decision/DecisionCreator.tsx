@@ -117,27 +117,6 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
     currentConsRef.current = cons
   }, [cons])
 
-  const makeAutoDecision = useCallback(() => {
-    const currentPros = currentProsRef.current
-    const currentCons = currentConsRef.current
-    let result: 'YES' | 'NO'
-    
-    if (currentPros.length > currentCons.length) {
-      result = 'YES'
-    } else if (currentCons.length > currentPros.length) {
-      result = 'NO'
-    } else {
-      // Coin flip for tie
-      result = Math.random() < 0.5 ? 'YES' : 'NO'
-    }
-    
-    setDecisionResult(result)
-    setShowResult(true)
-    setIsTimerActive(false)
-    localStorage.removeItem(`decision-timer-${userId}`) // Clear saved state
-    saveDecision(result)
-  }, [userId, saveDecision])
-
   useEffect(() => {
     let interval: NodeJS.Timeout
     if (isTimerActive && timeRemaining > 0) {
@@ -152,7 +131,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
       }, 1000)
     }
     return () => clearInterval(interval)
-  }, [isTimerActive, timeRemaining, makeAutoDecision])
+  }, [isTimerActive, timeRemaining])
 
   const addPro = () => {
     if (currentPro.trim() && pros.length < 5) {
@@ -189,7 +168,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
     setToasts(prev => prev.filter(toast => toast.id !== id))
   }, [])
 
-  const saveDecision = useCallback(async (result: 'YES' | 'NO') => {
+  const saveDecision = async (result: 'YES' | 'NO') => {
     const { question, timerMinutes } = getValues()
     const lockedUntil = new Date()
     lockedUntil.setDate(lockedUntil.getDate() + 30)
@@ -236,7 +215,28 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
     } finally {
       setIsLoading(false)
     }
-  }, [userId, getValues, onDecisionComplete, addToast])
+  }
+
+  const makeAutoDecision = () => {
+    const currentPros = currentProsRef.current
+    const currentCons = currentConsRef.current
+    let result: 'YES' | 'NO'
+    
+    if (currentPros.length > currentCons.length) {
+      result = 'YES'
+    } else if (currentCons.length > currentPros.length) {
+      result = 'NO'
+    } else {
+      // Coin flip for tie
+      result = Math.random() < 0.5 ? 'YES' : 'NO'
+    }
+    
+    setDecisionResult(result)
+    setShowResult(true)
+    setIsTimerActive(false)
+    localStorage.removeItem(`decision-timer-${userId}`) // Clear saved state
+    saveDecision(result)
+  }
 
   const startTimer = (data: DecisionForm) => {
     if (pros.length === 0 && cons.length === 0) {
