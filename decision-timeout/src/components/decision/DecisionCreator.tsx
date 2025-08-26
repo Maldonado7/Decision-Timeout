@@ -329,51 +329,54 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
 
   // Confidence Rating Screen - Compact Version
   if (showConfidenceRating && decisionResult) {
+    console.log('Showing confidence screen for decision:', decisionResult)
+    
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="max-w-md mx-auto text-center py-6"
+        className="max-w-sm mx-auto text-center py-4"
       >
-        <div className="bg-white/90 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/20">
-          {/* Header */}
+        <div className="bg-white/95 backdrop-blur-lg rounded-2xl p-5 shadow-xl border border-white/20">
+          {/* Compact Header */}
           <div className="mb-4">
-            <div className="text-3xl mb-2">{decisionResult === 'YES' ? '🚀' : '🛡️'}</div>
-            <h3 className="text-lg font-bold text-gray-800">
-              Decision: <span className={decisionResult === 'YES' ? 'text-green-600' : 'text-red-600'}>{decisionResult}</span>
-            </h3>
-            <p className="text-sm text-gray-600 mt-1">How confident are you?</p>
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <span className="text-2xl">{decisionResult === 'YES' ? '🚀' : '🛡️'}</span>
+              <span className="text-lg font-bold text-gray-800">
+                Your Choice: <span className={`px-2 py-1 rounded-lg text-white ${decisionResult === 'YES' ? 'bg-green-500' : 'bg-red-500'}`}>
+                  {decisionResult}
+                </span>
+              </span>
+            </div>
+            <p className="text-sm text-gray-600">Rate your confidence (1-10)</p>
           </div>
 
-          {/* Confidence Scale */}
-          <div className="mb-4">
-            <div className="flex justify-between text-xs text-gray-500 mb-2">
-              <span>Low</span>
-              <span>High</span>
-            </div>
-            <div className="grid grid-cols-10 gap-1">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
+          {/* Simplified Confidence Scale */}
+          <div className="mb-3">
+            <div className="grid grid-cols-5 gap-2">
+              {[
+                { range: [1, 2], label: '1-2', color: 'bg-red-500', desc: 'Very Low' },
+                { range: [3, 4], label: '3-4', color: 'bg-orange-400', desc: 'Low' },
+                { range: [5, 6], label: '5-6', color: 'bg-yellow-400', desc: 'Medium' },
+                { range: [7, 8], label: '7-8', color: 'bg-green-400', desc: 'High' },
+                { range: [9, 10], label: '9-10', color: 'bg-green-600', desc: 'Very High' }
+              ].map((group, index) => (
                 <motion.button
-                  key={rating}
-                  onClick={() => handleConfidenceSubmit(rating)}
-                  className={`h-10 rounded-md font-bold text-white text-sm transition-all duration-200 ${
-                    rating <= 3 
-                      ? 'bg-red-400 hover:bg-red-500' 
-                      : rating <= 7 
-                      ? 'bg-yellow-400 hover:bg-yellow-500' 
-                      : 'bg-green-400 hover:bg-green-500'
-                  }`}
+                  key={index}
+                  onClick={() => handleConfidenceSubmit(group.range[1])} // Use the higher value
+                  className={`${group.color} hover:opacity-80 text-white font-bold py-3 rounded-xl text-sm transition-all duration-200 shadow-md hover:shadow-lg`}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  {rating}
+                  <div>{group.label}</div>
+                  <div className="text-xs opacity-90">{group.desc}</div>
                 </motion.button>
               ))}
             </div>
           </div>
           
-          <div className="text-xs text-gray-500">
-            💡 Helps you learn decision patterns
+          <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-2">
+            💡 Quick confidence rating
           </div>
         </div>
       </motion.div>
@@ -869,6 +872,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
               <button
                 type="button"
                 onClick={() => {
+                  console.log('Manual YES decision clicked')
                   setDecisionResult('YES')
                   setShowConfidenceRating(true)
                   setIsTimerActive(false)
@@ -881,6 +885,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
               <button
                 type="button"
                 onClick={() => {
+                  console.log('Manual NO decision clicked')
                   setDecisionResult('NO')
                   setShowConfidenceRating(true)
                   setIsTimerActive(false)
