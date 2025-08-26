@@ -42,11 +42,14 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
   const [toasts, setToasts] = useState<ToastMessage[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
-  const { register, handleSubmit, formState: { errors }, getValues, setValue } = useForm<DecisionForm>({
+  const { register, handleSubmit, formState: { errors }, getValues, setValue, watch } = useForm<DecisionForm>({
     defaultValues: {
       timerMinutes: 10
     }
   })
+
+  const watchedTimerMinutes = watch('timerMinutes')
+  const watchedQuestion = watch('question')
 
   // Load persisted timer state on component mount
   useEffect(() => {
@@ -321,13 +324,13 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
           <div className="mb-8">
             <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
               <span>Progress</span>
-              <span>{Math.round(((pros.length + cons.length) / 10 + (getValues('question')?.length > 0 ? 1 : 0)) / 2 * 100)}% Complete</span>
+              <span>{Math.round(((pros.length + cons.length) / 10 + (watchedQuestion?.length > 0 ? 1 : 0)) / 2 * 100)}% Complete</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
               <motion.div 
                 className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
                 initial={{ width: 0 }}
-                animate={{ width: `${Math.round(((pros.length + cons.length) / 10 + (getValues('question')?.length > 0 ? 1 : 0)) / 2 * 100)}%` }}
+                animate={{ width: `${Math.round(((pros.length + cons.length) / 10 + (watchedQuestion?.length > 0 ? 1 : 0)) / 2 * 100)}%` }}
                 transition={{ duration: 0.5 }}
               />
             </div>
@@ -596,7 +599,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
                   <motion.label
                     key={option.value}
                     className={`relative cursor-pointer group ${
-                      getValues('timerMinutes') === option.value
+                      watchedTimerMinutes === option.value
                         ? 'ring-2 ring-indigo-500 ring-offset-2'
                         : ''
                     }`}
@@ -610,7 +613,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
                       className="sr-only"
                     />
                     <div className={`bg-white/80 backdrop-blur-sm rounded-xl p-4 border-2 transition-all duration-200 group-hover:shadow-lg ${
-                      getValues('timerMinutes') === option.value
+                      watchedTimerMinutes === option.value
                         ? 'border-indigo-400 bg-indigo-50/80'
                         : 'border-gray-200 hover:border-indigo-300'
                     }`}>
@@ -668,7 +671,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-5 rounded-2xl text-xl font-bold shadow-xl hover:shadow-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            disabled={!getValues('question')?.trim() || (pros.length === 0 && cons.length === 0)}
+            disabled={!watchedQuestion?.trim() || (pros.length === 0 && cons.length === 0)}
           >
             <motion.div
               className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"
