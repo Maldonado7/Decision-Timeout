@@ -353,7 +353,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
               <input
                 {...register('question', { required: 'Question is required' })}
                 disabled={isTimerActive}
-                className="w-full px-6 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none text-lg disabled:bg-gray-100 transition-all duration-200 shadow-lg hover:shadow-xl bg-white/80"
+                className="w-full px-6 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none text-lg text-gray-900 placeholder-gray-400 disabled:bg-gray-100 disabled:text-gray-500 transition-all duration-200 shadow-lg hover:shadow-xl bg-white/90"
                 placeholder="e.g., Should I accept this job offer?"
               />
               <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
