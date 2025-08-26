@@ -25,6 +25,8 @@ export default function DecisionHistory({ userId }: DecisionHistoryProps) {
   const fetchDecisionsCallback = useCallback(async () => {
     try {
       setError(null)
+      console.log('Fetching decisions for user:', userId)
+      
       const { data, error } = await supabase
         .from('decisions')
         .select('*')
@@ -33,11 +35,41 @@ export default function DecisionHistory({ userId }: DecisionHistoryProps) {
 
       if (error) throw error
 
+      console.log('Fetched decisions data:', data)
+      console.log('Number of decisions found:', data?.length || 0)
+
       setDecisions(data || [])
       calculateStats(data || [])
     } catch (error) {
       console.error('Error fetching decisions:', error)
-      setError(error instanceof Error ? error.message : 'Failed to load decisions')
+      
+      // Better error message extraction for Supabase (same pattern as DecisionCreator)
+      let errorMessage = 'Failed to load decisions. Please try again.'
+      
+      if (error && typeof error === 'object') {
+        // Handle Supabase-specific error structure
+        if ('message' in error && error.message) {
+          errorMessage = error.message
+        } else if ('error' in error && typeof error.error === 'object') {
+          // Nested error object
+          errorMessage = error.error.message || error.error.details || 'Database connection issue'
+        } else if ('details' in error && error.details) {
+          errorMessage = error.details
+        } else if ('hint' in error && error.hint) {
+          errorMessage = error.hint
+        } else if ('code' in error && error.code) {
+          // PostgreSQL error codes
+          errorMessage = `Database error (${error.code}): ${error.message || 'Please check your connection'}`
+        } else {
+          // Last resort - but make it user-friendly
+          const errorStr = JSON.stringify(error)
+          errorMessage = errorStr === '{}' ? 'Connection issue - please try refreshing the page' : `Error: ${errorStr}`
+        }
+      } else if (typeof error === 'string') {
+        errorMessage = error
+      }
+      
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -139,6 +171,40 @@ export default function DecisionHistory({ userId }: DecisionHistoryProps) {
             Try Again
           </button>
         </div>
+      </div>
+    )
+  }
+
+  // Handle empty state when no decisions exist
+  if (decisions.length === 0 && !loading && !error) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl p-12 text-center border border-white/20"
+        >
+          <div className="text-6xl mb-6">🤔</div>
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">
+            No Decisions Yet
+          </h2>
+          <p className="text-gray-600 text-lg mb-8 max-w-md mx-auto leading-relaxed">
+            Your decision history will appear here once you start making choices with Decision Timeout. 
+            Ready to beat analysis paralysis?
+          </p>
+          <motion.a
+            href="/dashboard"
+            className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-xl hover:shadow-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <span className="text-2xl">🚀</span>
+            Make Your First Decision
+          </motion.a>
+          <div className="mt-8 text-sm text-gray-500 bg-gray-50 rounded-lg p-4">
+            💡 Tip: Each decision you make will be tracked here with outcomes, time saved, and success patterns
+          </div>
+        </motion.div>
       </div>
     )
   }
