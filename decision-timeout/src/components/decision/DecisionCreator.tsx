@@ -180,6 +180,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
     setIsLoading(true)
 
     try {
+      // Try to save to database first
       const { data, error } = await supabase
         .from('decisions')
         .insert({
@@ -190,22 +191,21 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
           result,
           locked_until: lockedUntil.toISOString(),
           time_saved: timerMinutes
-          // No confidence level needed - decision is what matters
         })
         .select()
         .single()
 
       if (error) throw error
       
-      // Decision-specific success messages
+      // Success - decision saved to database
       const successMessages = {
         YES: {
           title: '✅ Decision Made: YES!',
-          description: `Great choice! You've decided to go forward. This decision is locked for 30 days - trust your judgment and move ahead with confidence! 🚀`
+          description: `Great choice! You've decided to go forward. This decision is saved and locked for 30 days - trust your judgment and move ahead with confidence! 🚀`
         },
         NO: {
           title: '❌ Decision Made: NO!',
-          description: `Sometimes saying no is the right choice. You've avoided a path that didn't feel right. This decision is locked for 30 days - trust your instincts! 🛡️`
+          description: `Smart boundary! You've protected your time and energy. This decision is saved and locked for 30 days - trust your instincts! 🛡️`
         }
       }
 
@@ -217,45 +217,66 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
       
       onDecisionComplete(data as Decision)
     } catch (error) {
-      console.error('Error saving decision:', error)
+      console.error('Database save failed:', error)
       
-      // Better error message extraction for Supabase
-      let errorMessage = 'An unexpected error occurred. Please try again.'
+      // Database failed - give user options
+      const proceed = confirm(
+        `Your decision: ${result}\n\n` +
+        `Database isn't set up yet, so this decision won't be saved to history.\n\n` +
+        `Options:\n` +
+        `• Click OK to continue without saving (you'll see your decision result)\n` +
+        `• Click Cancel to go back and set up database first\n\n` +
+        `(Check QUICK_FIX_README.md for database setup instructions)`
+      )
       
-      if (error && typeof error === 'object') {
-        // Handle Supabase-specific error structure
-        if ('message' in error && error.message) {
-          errorMessage = error.message
-        } else if ('error' in error && typeof error.error === 'object') {
-          // Nested error object
-          errorMessage = error.error.message || error.error.details || 'Database connection issue'
-        } else if ('details' in error && error.details) {
-          errorMessage = error.details
-        } else if ('hint' in error && error.hint) {
-          errorMessage = error.hint
-        } else if ('code' in error && error.code) {
-          // PostgreSQL error codes
-          errorMessage = `Database error (${error.code}): ${error.message || 'Please check your connection'}`
-        } else {
-          // Last resort - but make it user-friendly
-          const errorStr = JSON.stringify(error)
-          errorMessage = errorStr === '{}' ? 'Connection issue - please try again' : `Error: ${errorStr}`
+      if (proceed) {
+        // User chose to continue without saving
+        const successMessages = {
+          YES: {
+            title: '✅ Decision Made: YES!',
+            description: `Great choice! You've decided to go forward. Trust your judgment and move ahead with confidence! 🚀 (Not saved to history - set up database to enable saving)`
+          },
+          NO: {
+            title: '❌ Decision Made: NO!',
+            description: `Smart boundary! You've protected your time and energy. Trust your instincts! 🛡️ (Not saved to history - set up database to enable saving)`
+          }
         }
-      } else if (typeof error === 'string') {
-        errorMessage = error
+
+        addToast({
+          type: 'success',
+          ...successMessages[result],
+          duration: 6000
+        })
+        
+        // Create mock decision object for onDecisionComplete
+        const mockDecision: Decision = {
+          id: generateId(),
+          user_id: userId,
+          question,
+          pros: currentProsRef.current,
+          cons: currentConsRef.current,
+          result,
+          locked_until: lockedUntil.toISOString(),
+          time_saved: timerMinutes,
+          created_at: new Date().toISOString(),
+          outcome: 'pending'
+        }
+        
+        onDecisionComplete(mockDecision)
+      } else {
+        // User chose to go back and set up database
+        addToast({
+          type: 'info',
+          title: '🔧 Database Setup Needed',
+          description: 'Go to Supabase Dashboard → SQL Editor and run the setup_database.sql script. Then try making your decision again!',
+          duration: 8000
+        })
+        
+        // Reset to allow user to try again after database setup
+        setDecisionResult(null)
+        setShowResult(false)
+        setIsTimerActive(false)
       }
-      
-      addToast({
-        type: 'error',
-        title: '💥 Failed to Save Decision',
-        description: `Oops! We couldn't save your decision: ${errorMessage}`,
-        duration: 8000
-      })
-      
-      // Reset UI state so user can try again
-      setDecisionResult(null)
-      setShowResult(false)
-      setIsTimerActive(false)
     } finally {
       setIsLoading(false)
     }
