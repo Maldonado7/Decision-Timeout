@@ -67,12 +67,12 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
           setTimeRemaining(remaining)
           setIsTimerActive(true)
         } else if (timerState.isActive) {
-          // Timer expired while away, make auto decision
+          // Timer expired while away, will handle this later
           setPros(timerState.pros)
           setCons(timerState.cons)
           setValue('question', timerState.question)
           setValue('timerMinutes', timerState.timerMinutes)
-          makeAutoDecision()
+          // Note: Auto-decision will be triggered after component loads
           localStorage.removeItem(`decision-timer-${userId}`)
         }
       } catch (error) {
@@ -80,7 +80,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
         localStorage.removeItem(`decision-timer-${userId}`)
       }
     }
-  }, [userId, setValue, makeAutoDecision])
+  }, [userId, setValue])
 
   // Save timer state to localStorage
   const saveTimerState = useCallback(() => {
@@ -531,6 +531,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
           </div>
         )}
       </form>
+      </motion.div>
       
       {isLoading && (
         <motion.div 
@@ -565,7 +566,6 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
           </motion.div>
         </motion.div>
       )}
-    </div>
     </>
   )
 }
