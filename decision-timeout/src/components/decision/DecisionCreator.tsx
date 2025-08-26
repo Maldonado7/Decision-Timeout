@@ -329,86 +329,55 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
     }
   }
 
-  // Confidence Rating Screen - Improved UX Version
+  // Minimalist Confidence Rating Screen
   if (showConfidenceRating && decisionResult) {
-    console.log('Showing confidence screen for decision:', decisionResult)
+    console.log('🔍 CONFIDENCE SCREEN - Decision Result:', decisionResult)
+    console.log('🔍 CONFIDENCE SCREEN - Decision State:', { decisionResult, showConfidenceRating, isTimerActive })
     
     return (
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-lg mx-auto text-center py-6"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="max-w-md mx-auto text-center py-6"
       >
-        <div className="bg-white/95 backdrop-blur-lg rounded-3xl p-8 shadow-2xl border border-white/20">
-          {/* Clear Decision Display */}
-          <motion.div 
-            className="mb-6"
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className="text-4xl mb-3">{decisionResult === 'YES' ? '🚀' : '🛡️'}</div>
-            <div className="text-2xl font-bold text-gray-800 mb-2">
-              Your Decision: 
+        <div className="bg-white/90 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/20">
+          
+          {/* Decision Display with Debug Info */}
+          <div className="mb-5">
+            <div className="text-3xl mb-2">{decisionResult === 'YES' ? '🚀' : '🛡️'}</div>
+            <div className="text-lg font-bold text-gray-800">
+              Decision: <span className={`px-3 py-1 rounded-lg text-white ${decisionResult === 'YES' ? 'bg-green-500' : 'bg-red-500'}`}>
+                {decisionResult}
+              </span>
             </div>
-            <div className={`inline-block px-6 py-2 rounded-full text-xl font-black text-white shadow-lg ${
-              decisionResult === 'YES' ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gradient-to-r from-red-500 to-rose-500'
-            }`}>
-              {decisionResult}
-            </div>
-          </motion.div>
+            {/* Debug display */}
+            <div className="text-xs text-gray-400 mt-1">Debug: {decisionResult}</div>
+          </div>
 
-          {/* Improved Confidence Scale */}
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              How confident do you feel about this choice?
-            </h3>
-            
-            {/* Labels */}
-            <div className="flex justify-between text-sm text-gray-600 mb-3 px-2">
-              <span>Not Confident</span>
-              <span>Very Confident</span>
-            </div>
-            
-            {/* Confidence Buttons */}
-            <div className="grid grid-cols-10 gap-2">
+          {/* Minimalist Confidence Scale */}
+          <div className="mb-4">
+            <p className="text-sm text-gray-600 mb-3">Rate your confidence:</p>
+            <div className="grid grid-cols-10 gap-1">
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
                 <motion.button
                   key={rating}
                   onClick={() => handleConfidenceSubmit(rating)}
-                  className={`h-14 rounded-xl font-bold text-white text-lg transition-all duration-300 shadow-md hover:shadow-xl ${
-                    rating <= 2 
-                      ? 'bg-gradient-to-b from-red-400 to-red-500 hover:from-red-500 hover:to-red-600' 
-                      : rating <= 4
-                      ? 'bg-gradient-to-b from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600'
-                      : rating <= 6
-                      ? 'bg-gradient-to-b from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600'
-                      : rating <= 8
-                      ? 'bg-gradient-to-b from-green-400 to-green-500 hover:from-green-500 hover:to-green-600'
-                      : 'bg-gradient-to-b from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700'
+                  className={`h-10 rounded-lg font-bold text-white text-sm transition-all duration-200 ${
+                    rating <= 3 ? 'bg-red-400 hover:bg-red-500' 
+                    : rating <= 7 ? 'bg-yellow-400 hover:bg-yellow-500' 
+                    : 'bg-green-500 hover:bg-green-600'
                   }`}
-                  whileHover={{ scale: 1.1, y: -2 }}
+                  whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   {rating}
                 </motion.button>
               ))}
             </div>
-            
-            {/* Helper Text */}
-            <div className="mt-4 text-sm text-gray-500">
-              <div className="grid grid-cols-5 gap-2 text-xs">
-                <span>Very Low</span>
-                <span>Low</span>
-                <span>Medium</span>
-                <span>High</span>
-                <span>Very High</span>
-              </div>
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>Low</span>
+              <span>High</span>
             </div>
-          </div>
-          
-          <div className="text-sm text-indigo-600 bg-indigo-50 rounded-xl p-3 border border-indigo-100">
-            💡 This helps you understand your decision-making patterns over time
           </div>
         </div>
       </motion.div>
@@ -904,11 +873,12 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
               <button
                 type="button"
                 onClick={() => {
-                  console.log('Manual YES decision clicked')
+                  console.log('🟢 MANUAL YES CLICKED at', new Date().toISOString())
                   setDecisionResult('YES')
                   setShowConfidenceRating(true)
                   setIsTimerActive(false)
                   localStorage.removeItem(`decision-timer-${userId}`)
+                  console.log('🟢 MANUAL YES - State set to YES')
                 }}
                 className="flex-1 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors"
               >
@@ -917,11 +887,12 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
               <button
                 type="button"
                 onClick={() => {
-                  console.log('Manual NO decision clicked')
+                  console.log('🔴 MANUAL NO CLICKED at', new Date().toISOString())
                   setDecisionResult('NO')
                   setShowConfidenceRating(true)
                   setIsTimerActive(false)
                   localStorage.removeItem(`decision-timer-${userId}`)
+                  console.log('🔴 MANUAL NO - State set to NO')
                 }}
                 className="flex-1 bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors"
               >
