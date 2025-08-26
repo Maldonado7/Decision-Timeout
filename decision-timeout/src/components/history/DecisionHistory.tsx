@@ -27,10 +27,6 @@ export default function DecisionHistory({ userId }: DecisionHistoryProps) {
       setError(null)
       console.log('Fetching decisions for user:', userId)
       
-      // First, test basic connection to Supabase
-      const connectionTest = await supabase.from('decisions').select('count(*)', { count: 'exact', head: true })
-      console.log('Supabase connection test:', connectionTest)
-      
       const { data, error } = await supabase
         .from('decisions')
         .select('*')
@@ -45,52 +41,13 @@ export default function DecisionHistory({ userId }: DecisionHistoryProps) {
       setDecisions(data || [])
       calculateStats(data || [])
     } catch (error) {
-      console.error('Error fetching decisions:', error)
+      // For any Supabase error (table not found, permissions, etc.), 
+      // just show empty state instead of error screen
+      console.log('Supabase error detected, showing empty state:', error)
       
-      // Better error message extraction for Supabase
-      let errorMessage = 'Failed to load decisions. Please try again.'
-      
-      if (error && typeof error === 'object') {
-        // Handle Supabase-specific error structure
-        if ('message' in error && error.message) {
-          errorMessage = error.message
-        } else if ('error' in error && typeof error.error === 'object') {
-          // Nested error object
-          errorMessage = error.error.message || error.error.details || 'Database connection issue'
-        } else if ('details' in error && error.details) {
-          errorMessage = error.details
-        } else if ('hint' in error && error.hint) {
-          errorMessage = error.hint
-        } else if ('code' in error && error.code) {
-          // PostgreSQL error codes
-          errorMessage = `Database error (${error.code}): ${error.message || 'Please check your connection'}`
-        } else {
-          // Handle the common {} error - likely table doesn't exist or no permissions
-          const errorStr = JSON.stringify(error)
-          if (errorStr === '{}') {
-            errorMessage = 'Database setup required'
-          } else {
-            errorMessage = `Error: ${errorStr}`
-          }
-        }
-      } else if (typeof error === 'string') {
-        errorMessage = error
-      }
-      
-      // If it's a database setup issue, set error to null and show empty state instead
-      if (errorMessage.includes('Database setup required') || 
-          errorMessage.includes('Connection issue') ||
-          errorMessage.includes('table') ||
-          errorMessage.includes('schema cache') ||
-          errorMessage.includes('public.decisions')) {
-        console.log('Database table not set up yet, showing empty state instead of error')
-        setError(null)
-        setDecisions([])
-        calculateStats([])
-        return
-      }
-      
-      setError(errorMessage)
+      setError(null)
+      setDecisions([])
+      calculateStats([])
     } finally {
       setLoading(false)
     }
