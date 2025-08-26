@@ -609,7 +609,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
                     <input
                       type="radio"
                       value={option.value}
-                      {...register('timerMinutes')}
+                      {...register('timerMinutes', { valueAsNumber: true })}
                       className="sr-only"
                     />
                     <div className={`bg-white/80 backdrop-blur-sm rounded-xl p-4 border-2 transition-all duration-200 group-hover:shadow-lg ${
