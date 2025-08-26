@@ -39,6 +39,8 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
   const [timeRemaining, setTimeRemaining] = useState(0)
   const [decisionResult, setDecisionResult] = useState<'YES' | 'NO' | null>(null)
   const [showResult, setShowResult] = useState(false)
+  const [showConfidenceRating, setShowConfidenceRating] = useState(false)
+  const [confidenceLevel, setConfidenceLevel] = useState<number | null>(null)
   const [toasts, setToasts] = useState<ToastMessage[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
@@ -188,27 +190,67 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
           cons: currentConsRef.current,
           result,
           locked_until: lockedUntil.toISOString(),
-          time_saved: timerMinutes
+          time_saved: timerMinutes,
+          confidence_level: confidenceLevel
         })
         .select()
         .single()
 
       if (error) throw error
       
+      // Decision-specific success messages
+      const successMessages = {
+        YES: {
+          title: '✅ Decision Made: YES!',
+          description: `Great choice! You've decided to go forward. This decision is locked for 30 days - trust your judgment and move ahead with confidence! 🚀`
+        },
+        NO: {
+          title: '❌ Decision Made: NO!',
+          description: `Sometimes saying no is the right choice. You've avoided a path that didn't feel right. This decision is locked for 30 days - trust your instincts! 🛡️`
+        }
+      }
+
       addToast({
         type: 'success',
-        title: 'Decision Saved!',
-        description: `Your decision "${result}" has been locked for 30 days.`
+        ...successMessages[result],
+        duration: 6000
       })
       
       onDecisionComplete(data as Decision)
     } catch (error) {
       console.error('Error saving decision:', error)
+      
+      // Better error message extraction for Supabase
+      let errorMessage = 'An unexpected error occurred. Please try again.'
+      
+      if (error && typeof error === 'object') {
+        // Handle Supabase-specific error structure
+        if ('message' in error && error.message) {
+          errorMessage = error.message
+        } else if ('error' in error && typeof error.error === 'object') {
+          // Nested error object
+          errorMessage = error.error.message || error.error.details || 'Database connection issue'
+        } else if ('details' in error && error.details) {
+          errorMessage = error.details
+        } else if ('hint' in error && error.hint) {
+          errorMessage = error.hint
+        } else if ('code' in error && error.code) {
+          // PostgreSQL error codes
+          errorMessage = `Database error (${error.code}): ${error.message || 'Please check your connection'}`
+        } else {
+          // Last resort - but make it user-friendly
+          const errorStr = JSON.stringify(error)
+          errorMessage = errorStr === '{}' ? 'Connection issue - please try again' : `Error: ${errorStr}`
+        }
+      } else if (typeof error === 'string') {
+        errorMessage = error
+      }
+      
       addToast({
         type: 'error',
-        title: 'Failed to Save Decision',
-        description: error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.',
-        duration: 7000
+        title: '💥 Failed to Save Decision',
+        description: `Oops! We couldn't save your decision: ${errorMessage}`,
+        duration: 8000
       })
       
       // Reset UI state so user can try again
@@ -235,10 +277,9 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
     }
     
     setDecisionResult(result)
-    setShowResult(true)
+    setShowConfidenceRating(true)
     setIsTimerActive(false)
     localStorage.removeItem(`decision-timer-${userId}`) // Clear saved state
-    saveDecision(result)
   }
 
   const startTimer = (data: DecisionForm) => {
@@ -277,35 +318,177 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
+  const handleConfidenceSubmit = (confidence: number) => {
+    setConfidenceLevel(confidence)
+    setShowConfidenceRating(false)
+    setShowResult(true)
+    if (decisionResult) {
+      saveDecision(decisionResult)
+    }
+  }
+
+  // Confidence Rating Screen
+  if (showConfidenceRating && decisionResult) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="max-w-lg mx-auto text-center py-8"
+      >
+        <motion.div
+          initial={{ y: -20 }}
+          animate={{ y: 0 }}
+          className="mb-8"
+        >
+          <div className={`text-5xl mb-4 ${decisionResult === 'YES' ? '🚀' : '🛡️'}`}>
+            {decisionResult === 'YES' ? '🚀' : '🛡️'}
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            You chose: <span className={decisionResult === 'YES' ? 'text-green-600' : 'text-red-600'}>{decisionResult}</span>
+          </h2>
+          <p className="text-gray-600">
+            How confident do you feel about this decision?
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="bg-white/90 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/20"
+        >
+          <div className="mb-6">
+            <div className="flex justify-between text-sm text-gray-500 mb-3">
+              <span>Not confident</span>
+              <span>Very confident</span>
+            </div>
+            <div className="grid grid-cols-10 gap-2">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
+                <motion.button
+                  key={rating}
+                  onClick={() => handleConfidenceSubmit(rating)}
+                  className={`h-12 rounded-lg font-bold text-white transition-all duration-200 ${
+                    rating <= 3 
+                      ? 'bg-red-400 hover:bg-red-500' 
+                      : rating <= 7 
+                      ? 'bg-yellow-400 hover:bg-yellow-500' 
+                      : 'bg-green-400 hover:bg-green-500'
+                  }`}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {rating}
+                </motion.button>
+              ))}
+            </div>
+          </div>
+          
+          <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-3">
+            💡 This helps you learn about your decision-making patterns over time
+          </div>
+        </motion.div>
+      </motion.div>
+    )
+  }
+
   if (showResult) {
+    // Decision-specific psychological reinforcement messages
+    const decisionMessages = {
+      YES: {
+        title: "You Said YES! ✅",
+        subtitle: "Move Forward with Confidence",
+        message: "Great choice! You've decided to take action. Research shows that people who commit to forward-moving decisions experience higher satisfaction and growth.",
+        affirmation: "Trust your decision. You've considered the options and chosen progress.",
+        emoji: "🚀",
+        gradient: "from-green-400 to-emerald-500"
+      },
+      NO: {
+        title: "You Said NO! ❌", 
+        subtitle: "Protect Your Energy",
+        message: "Smart boundary! Saying no is a powerful decision that protects your time and energy for what truly matters. This takes courage and wisdom.",
+        affirmation: "Your 'no' is valuable. You've prioritized what aligns with your goals.", 
+        emoji: "🛡️",
+        gradient: "from-red-400 to-rose-500"
+      }
+    }
+    
+    const currentMessage = decisionMessages[decisionResult!]
+    
     return (
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="text-center py-12"
+        className="max-w-2xl mx-auto text-center py-8"
       >
         <motion.div
-          initial={{ y: -50 }}
+          initial={{ y: -30 }}
           animate={{ y: 0 }}
-          className={`text-6xl font-bold mb-4 ${
-            decisionResult === 'YES' ? 'text-green-500' : 'text-red-500'
-          }`}
+          className="mb-6"
         >
-          DECISION MADE
+          <div className={`text-6xl mb-4`}>
+            {currentMessage.emoji}
+          </div>
+          <h1 className={`text-4xl font-bold bg-gradient-to-r ${currentMessage.gradient} bg-clip-text text-transparent mb-2`}>
+            {currentMessage.title}
+          </h1>
+          <h2 className="text-xl text-gray-600 font-medium">
+            {currentMessage.subtitle}
+          </h2>
         </motion.div>
+
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          transition={{ delay: 0.5 }}
-          className={`text-8xl font-black ${
-            decisionResult === 'YES' ? 'text-green-600' : 'text-red-600'
-          }`}
+          transition={{ delay: 0.3 }}
+          className="bg-white/90 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/20 mb-6"
         >
-          {decisionResult}
+          <p className="text-gray-700 text-lg mb-4 leading-relaxed">
+            {currentMessage.message}
+          </p>
+          <div className={`p-4 rounded-xl bg-gradient-to-r ${currentMessage.gradient} bg-opacity-10 border border-current border-opacity-20`}>
+            <p className="font-semibold text-gray-800">
+              💭 {currentMessage.affirmation}
+            </p>
+          </div>
         </motion.div>
-        <p className="text-gray-600 mt-6 text-lg">
-          This decision is locked for 30 days
-        </p>
+
+        {confidenceLevel && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mb-4 bg-indigo-50 rounded-lg p-4 border border-indigo-200"
+          >
+            <div className="flex items-center justify-center gap-3">
+              <span className="text-indigo-600 font-medium">Confidence Level:</span>
+              <div className="flex gap-1">
+                {[...Array(10)].map((_, i) => (
+                  <div
+                    key={i}
+                    className={`w-3 h-3 rounded-full ${
+                      i < confidenceLevel! ? 'bg-indigo-500' : 'bg-gray-300'
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-indigo-700 font-bold">{confidenceLevel}/10</span>
+            </div>
+            <p className="text-xs text-indigo-600 text-center mt-2">
+              {confidenceLevel <= 3 ? "Low confidence - consider reviewing this decision in the future" 
+               : confidenceLevel <= 7 ? "Moderate confidence - you've made a reasoned choice"
+               : "High confidence - you feel very sure about this decision"}
+            </p>
+          </motion.div>
+        )}
+
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="text-sm text-gray-500 bg-gray-50 rounded-lg p-3"
+        >
+          🔒 This decision is locked for 30 days to help you commit fully and avoid second-guessing
+        </motion.div>
       </motion.div>
     )
   }
@@ -707,9 +890,9 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
                 type="button"
                 onClick={() => {
                   setDecisionResult('NO')
-                  setShowResult(true)
+                  setShowConfidenceRating(true)
                   setIsTimerActive(false)
-                  saveDecision('NO')
+                  localStorage.removeItem(`decision-timer-${userId}`)
                 }}
                 className="flex-1 bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors"
               >
