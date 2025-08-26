@@ -715,7 +715,8 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
             </div>
           </div>
         )}
-      </form>
+        </form>
+        </div>
       </motion.div>
       
       {isLoading && (
