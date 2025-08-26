@@ -78,8 +78,12 @@ export default function DecisionHistory({ userId }: DecisionHistoryProps) {
       }
       
       // If it's a database setup issue, set error to null and show empty state instead
-      if (errorMessage.includes('Database setup required') || errorMessage.includes('Connection issue')) {
-        console.log('Database not set up yet, showing empty state instead of error')
+      if (errorMessage.includes('Database setup required') || 
+          errorMessage.includes('Connection issue') ||
+          errorMessage.includes('table') ||
+          errorMessage.includes('schema cache') ||
+          errorMessage.includes('public.decisions')) {
+        console.log('Database table not set up yet, showing empty state instead of error')
         setError(null)
         setDecisions([])
         calculateStats([])
