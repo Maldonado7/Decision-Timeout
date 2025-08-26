@@ -327,54 +327,43 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
     }
   }
 
-  // Confidence Rating Screen
+  // Confidence Rating Screen - Compact Version
   if (showConfidenceRating && decisionResult) {
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="max-w-lg mx-auto text-center py-8"
+        className="max-w-md mx-auto text-center py-6"
       >
-        <motion.div
-          initial={{ y: -20 }}
-          animate={{ y: 0 }}
-          className="mb-8"
-        >
-          <div className={`text-5xl mb-4 ${decisionResult === 'YES' ? '🚀' : '🛡️'}`}>
-            {decisionResult === 'YES' ? '🚀' : '🛡️'}
+        <div className="bg-white/90 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/20">
+          {/* Header */}
+          <div className="mb-4">
+            <div className="text-3xl mb-2">{decisionResult === 'YES' ? '🚀' : '🛡️'}</div>
+            <h3 className="text-lg font-bold text-gray-800">
+              Decision: <span className={decisionResult === 'YES' ? 'text-green-600' : 'text-red-600'}>{decisionResult}</span>
+            </h3>
+            <p className="text-sm text-gray-600 mt-1">How confident are you?</p>
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            You chose: <span className={decisionResult === 'YES' ? 'text-green-600' : 'text-red-600'}>{decisionResult}</span>
-          </h2>
-          <p className="text-gray-600">
-            How confident do you feel about this decision?
-          </p>
-        </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="bg-white/90 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/20"
-        >
-          <div className="mb-6">
-            <div className="flex justify-between text-sm text-gray-500 mb-3">
-              <span>Not confident</span>
-              <span>Very confident</span>
+          {/* Confidence Scale */}
+          <div className="mb-4">
+            <div className="flex justify-between text-xs text-gray-500 mb-2">
+              <span>Low</span>
+              <span>High</span>
             </div>
-            <div className="grid grid-cols-10 gap-2">
+            <div className="grid grid-cols-10 gap-1">
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
                 <motion.button
                   key={rating}
                   onClick={() => handleConfidenceSubmit(rating)}
-                  className={`h-12 rounded-lg font-bold text-white transition-all duration-200 ${
+                  className={`h-10 rounded-md font-bold text-white text-sm transition-all duration-200 ${
                     rating <= 3 
                       ? 'bg-red-400 hover:bg-red-500' 
                       : rating <= 7 
                       ? 'bg-yellow-400 hover:bg-yellow-500' 
                       : 'bg-green-400 hover:bg-green-500'
                   }`}
-                  whileHover={{ scale: 1.1 }}
+                  whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
                   {rating}
@@ -383,10 +372,10 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
             </div>
           </div>
           
-          <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-3">
-            💡 This helps you learn about your decision-making patterns over time
+          <div className="text-xs text-gray-500">
+            💡 Helps you learn decision patterns
           </div>
-        </motion.div>
+        </div>
       </motion.div>
     )
   }
@@ -880,7 +869,10 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
               <button
                 type="button"
                 onClick={() => {
-                  makeAutoDecision()
+                  setDecisionResult('YES')
+                  setShowConfidenceRating(true)
+                  setIsTimerActive(false)
+                  localStorage.removeItem(`decision-timer-${userId}`)
                 }}
                 className="flex-1 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors"
               >
