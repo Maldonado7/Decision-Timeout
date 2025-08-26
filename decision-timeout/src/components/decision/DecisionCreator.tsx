@@ -311,40 +311,71 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
     <>
       <ToastContainer toasts={toasts} onClose={removeToast} />
       <motion.div 
-        className="max-w-2xl mx-auto p-6"
+        className="max-w-4xl mx-auto p-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-      <form onSubmit={handleSubmit(startTimer)} className="space-y-8">
-        {/* Question Input */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <label className="block text-lg font-semibold mb-3 text-gray-800">
-            🤔 What decision do you need to make?
-          </label>
-          <input
-            {...register('question', { required: 'Question is required' })}
-            disabled={isTimerActive}
-            className="w-full px-4 py-4 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 outline-none text-lg disabled:bg-gray-100 transition-all duration-200 shadow-sm hover:shadow-md"
-            placeholder="Should I build this feature?"
-          />
-          <AnimatePresence>
-            {errors.question && (
-              <motion.p 
-                className="text-red-500 mt-2 text-sm"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-              >
-                {errors.question.message}
-              </motion.p>
-            )}
-          </AnimatePresence>
-        </motion.div>
+        <div className="bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl p-8 border border-white/20">
+          {/* Progress Indicator */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between text-sm text-gray-500 mb-2">
+              <span>Progress</span>
+              <span>{Math.round(((pros.length + cons.length) / 10 + (getValues('question')?.length > 0 ? 1 : 0)) / 2 * 100)}% Complete</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+              <motion.div 
+                className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.round(((pros.length + cons.length) / 10 + (getValues('question')?.length > 0 ? 1 : 0)) / 2 * 100)}%` }}
+                transition={{ duration: 0.5 }}
+              />
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit(startTimer)} className="space-y-10">
+          {/* Question Input */}
+          <motion.div
+            className="relative"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                1
+              </div>
+              <label className="text-xl font-bold text-gray-800">
+                What decision do you need to make?
+              </label>
+            </div>
+            <div className="relative">
+              <input
+                {...register('question', { required: 'Question is required' })}
+                disabled={isTimerActive}
+                className="w-full px-6 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none text-lg disabled:bg-gray-100 transition-all duration-200 shadow-lg hover:shadow-xl bg-white/80"
+                placeholder="e.g., Should I accept this job offer?"
+              />
+              <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                <span className="text-2xl">🤔</span>
+              </div>
+            </div>
+            <div className="mt-2 text-sm text-gray-500">
+              💡 Tip: Be specific and clear about your decision
+            </div>
+            <AnimatePresence>
+              {errors.question && (
+                <motion.p 
+                  className="text-red-500 mt-2 text-sm font-medium"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                >
+                  {errors.question.message}
+                </motion.p>
+              )}
+            </AnimatePresence>
+          </motion.div>
 
         {/* Timer Display */}
         {isTimerActive && (
@@ -360,115 +391,181 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
           </motion.div>
         )}
 
-        {/* Pros Section */}
-        <div>
-          <h3 className="text-xl font-semibold text-green-600 mb-3">
-            Pros ({pros.length}/5)
-          </h3>
-          <div className="flex gap-2 mb-3">
-            <input
-              value={currentPro}
-              onChange={(e) => setCurrentPro(e.target.value)}
-              disabled={isTimerActive || pros.length >= 5}
-              className="flex-1 px-3 py-2 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none disabled:bg-gray-100"
-              placeholder="Add a pro..."
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault()
-                  addPro()
-                }
-              }}
-            />
-            <button
-              type="button"
-              onClick={addPro}
-              disabled={isTimerActive || !currentPro.trim() || pros.length >= 5}
-              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 transition-colors"
-            >
-              Add
-            </button>
-          </div>
-          <div className="space-y-2">
-            <AnimatePresence>
-              {pros.map((pro, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg"
+          {/* Pros/Cons Grid */}
+          <motion.div 
+            className="grid md:grid-cols-2 gap-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            {/* Pros Section */}
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  2
+                </div>
+                <h3 className="text-xl font-bold text-green-700">
+                  Pros ({pros.length}/5)
+                </h3>
+                <div className="text-2xl">✅</div>
+              </div>
+              <div className="flex gap-3 mb-4">
+                <div className="relative flex-1">
+                  <input
+                    value={currentPro}
+                    onChange={(e) => setCurrentPro(e.target.value)}
+                    disabled={isTimerActive || pros.length >= 5}
+                    className="w-full px-4 py-3 border-2 border-green-200 rounded-xl focus:ring-3 focus:ring-green-100 focus:border-green-400 outline-none disabled:bg-gray-100 text-gray-800 placeholder-green-400 bg-white/80 transition-all duration-200"
+                    placeholder="What's a positive aspect?"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        addPro()
+                      }
+                    }}
+                  />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-400">
+                    <span className="text-lg">➕</span>
+                  </div>
+                </div>
+                <motion.button
+                  type="button"
+                  onClick={addPro}
+                  disabled={isTimerActive || !currentPro.trim() || pros.length >= 5}
+                  className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold disabled:opacity-50 transition-all duration-200 hover:shadow-lg hover:scale-105 disabled:hover:scale-100"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="flex-1">{pro}</span>
-                  {!isTimerActive && (
-                    <button
-                      type="button"
-                      onClick={() => removePro(index)}
-                      className="text-red-500 hover:text-red-700 text-sm"
+                  Add
+                </motion.button>
+              </div>
+              <div className="space-y-3">
+                <AnimatePresence>
+                  {pros.length === 0 ? (
+                    <motion.div 
+                      className="text-center py-8 text-green-500"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
                     >
-                      Remove
-                    </button>
+                      <div className="text-4xl mb-2">🌟</div>
+                      <p className="text-sm">Start adding the positive aspects</p>
+                    </motion.div>
+                  ) : (
+                    pros.map((pro, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, x: -20, scale: 0.9 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: -20, scale: 0.9 }}
+                        className="group flex items-center gap-3 p-4 bg-white/60 border border-green-200 rounded-xl hover:shadow-md transition-all duration-200"
+                        whileHover={{ scale: 1.02 }}
+                      >
+                        <div className="w-6 h-6 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full flex items-center justify-center text-white font-bold text-xs">
+                          {index + 1}
+                        </div>
+                        <span className="flex-1 text-gray-800 font-medium">{pro}</span>
+                        {!isTimerActive && (
+                          <motion.button
+                            type="button"
+                            onClick={() => removePro(index)}
+                            className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition-all duration-200"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            <span className="text-sm">✕</span>
+                          </motion.button>
+                        )}
+                      </motion.div>
+                    ))
                   )}
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-        </div>
+                </AnimatePresence>
+              </div>
+            </div>
 
-        {/* Cons Section */}
-        <div>
-          <h3 className="text-xl font-semibold text-red-600 mb-3">
-            Cons ({cons.length}/5)
-          </h3>
-          <div className="flex gap-2 mb-3">
-            <input
-              value={currentCon}
-              onChange={(e) => setCurrentCon(e.target.value)}
-              disabled={isTimerActive || cons.length >= 5}
-              className="flex-1 px-3 py-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none disabled:bg-gray-100"
-              placeholder="Add a con..."
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault()
-                  addCon()
-                }
-              }}
-            />
-            <button
-              type="button"
-              onClick={addCon}
-              disabled={isTimerActive || !currentCon.trim() || cons.length >= 5}
-              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 transition-colors"
-            >
-              Add
-            </button>
-          </div>
-          <div className="space-y-2">
-            <AnimatePresence>
-              {cons.map((con, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  className="flex items-center gap-3 p-3 bg-red-50 border border-red-200 rounded-lg"
+            {/* Cons Section */}
+            <div className="bg-gradient-to-br from-red-50 to-rose-50 rounded-2xl p-6 border border-red-100">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-rose-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  3
+                </div>
+                <h3 className="text-xl font-bold text-red-700">
+                  Cons ({cons.length}/5)
+                </h3>
+                <div className="text-2xl">❌</div>
+              </div>
+              <div className="flex gap-3 mb-4">
+                <div className="relative flex-1">
+                  <input
+                    value={currentCon}
+                    onChange={(e) => setCurrentCon(e.target.value)}
+                    disabled={isTimerActive || cons.length >= 5}
+                    className="w-full px-4 py-3 border-2 border-red-200 rounded-xl focus:ring-3 focus:ring-red-100 focus:border-red-400 outline-none disabled:bg-gray-100 text-gray-800 placeholder-red-400 bg-white/80 transition-all duration-200"
+                    placeholder="What's a negative aspect?"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        addCon()
+                      }
+                    }}
+                  />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-400">
+                    <span className="text-lg">➖</span>
+                  </div>
+                </div>
+                <motion.button
+                  type="button"
+                  onClick={addCon}
+                  disabled={isTimerActive || !currentCon.trim() || cons.length >= 5}
+                  className="px-6 py-3 bg-gradient-to-r from-red-500 to-rose-500 text-white rounded-xl font-semibold disabled:opacity-50 transition-all duration-200 hover:shadow-lg hover:scale-105 disabled:hover:scale-100"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <span className="flex-1">{con}</span>
-                  {!isTimerActive && (
-                    <button
-                      type="button"
-                      onClick={() => removeCon(index)}
-                      className="text-red-500 hover:text-red-700 text-sm"
+                  Add
+                </motion.button>
+              </div>
+              <div className="space-y-3">
+                <AnimatePresence>
+                  {cons.length === 0 ? (
+                    <motion.div 
+                      className="text-center py-8 text-red-500"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
                     >
-                      Remove
-                    </button>
+                      <div className="text-4xl mb-2">⚠️</div>
+                      <p className="text-sm">Start adding the negative aspects</p>
+                    </motion.div>
+                  ) : (
+                    cons.map((con, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, x: 20, scale: 0.9 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: 20, scale: 0.9 }}
+                        className="group flex items-center gap-3 p-4 bg-white/60 border border-red-200 rounded-xl hover:shadow-md transition-all duration-200"
+                        whileHover={{ scale: 1.02 }}
+                      >
+                        <div className="w-6 h-6 bg-gradient-to-r from-red-400 to-rose-400 rounded-full flex items-center justify-center text-white font-bold text-xs">
+                          {index + 1}
+                        </div>
+                        <span className="flex-1 text-gray-800 font-medium">{con}</span>
+                        {!isTimerActive && (
+                          <motion.button
+                            type="button"
+                            onClick={() => removeCon(index)}
+                            className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition-all duration-200"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            <span className="text-sm">✕</span>
+                          </motion.button>
+                        )}
+                      </motion.div>
+                    ))
                   )}
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-        </div>
+                </AnimatePresence>
+              </div>
+            </div>
+          </motion.div>
 
         {/* Timer Selection */}
         <AnimatePresence>
@@ -478,30 +575,118 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ delay: 0.4 }}
+              className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100"
             >
-              <label className="block text-lg font-semibold mb-3 text-gray-800">
-                ⏱️ Decision Timer
-              </label>
-              <select
-                {...register('timerMinutes')}
-                className="w-full px-4 py-4 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 outline-none text-lg bg-white shadow-sm hover:shadow-md transition-all duration-200"
-              >
-                <option value={5}>5 minutes - Quick decisions</option>
-                <option value={10}>10 minutes - Balanced thinking</option>
-                <option value={15}>15 minutes - Deep consideration</option>
-              </select>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  4
+                </div>
+                <label className="text-xl font-bold text-indigo-700">
+                  Choose Your Decision Time
+                </label>
+                <div className="text-2xl">⏱️</div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                {[
+                  { value: 5, label: 'Quick', desc: 'For simple decisions', icon: '⚡', color: 'from-yellow-400 to-orange-400' },
+                  { value: 10, label: 'Balanced', desc: 'Most popular choice', icon: '⚖️', color: 'from-blue-400 to-indigo-400', recommended: true },
+                  { value: 15, label: 'Deep', desc: 'For complex decisions', icon: '🧠', color: 'from-purple-400 to-pink-400' }
+                ].map((option) => (
+                  <motion.label
+                    key={option.value}
+                    className={`relative cursor-pointer group ${
+                      getValues('timerMinutes') === option.value
+                        ? 'ring-2 ring-indigo-500 ring-offset-2'
+                        : ''
+                    }`}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <input
+                      type="radio"
+                      value={option.value}
+                      {...register('timerMinutes')}
+                      className="sr-only"
+                    />
+                    <div className={`bg-white/80 backdrop-blur-sm rounded-xl p-4 border-2 transition-all duration-200 group-hover:shadow-lg ${
+                      getValues('timerMinutes') === option.value
+                        ? 'border-indigo-400 bg-indigo-50/80'
+                        : 'border-gray-200 hover:border-indigo-300'
+                    }`}>
+                      <div className="text-center">
+                        <div className={`w-12 h-12 mx-auto mb-2 rounded-full bg-gradient-to-r ${option.color} flex items-center justify-center text-white text-lg font-bold shadow-lg`}>
+                          {option.icon}
+                        </div>
+                        <div className="font-bold text-gray-800 mb-1">
+                          {option.value} min
+                        </div>
+                        <div className="text-sm font-medium text-indigo-600 mb-1">
+                          {option.label}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {option.desc}
+                        </div>
+                        {option.recommended && (
+                          <motion.div 
+                            className="absolute -top-2 -right-2 bg-gradient-to-r from-green-400 to-emerald-400 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg"
+                            initial={{ scale: 0, rotate: -15 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ type: "spring", delay: 0.5 }}
+                          >
+                            ⭐ Popular
+                          </motion.div>
+                        )}
+                      </div>
+                    </div>
+                  </motion.label>
+                ))}
+              </div>
+              
+              <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 text-sm text-indigo-700 border border-indigo-200">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-base">💡</span>
+                  <span className="font-medium">Smart Suggestion:</span>
+                </div>
+                <p className="text-indigo-600">
+                  {(() => {
+                    const totalItems = pros.length + cons.length
+                    if (totalItems <= 3) return "5-10 minutes should be enough for this decision"
+                    if (totalItems <= 6) return "10 minutes is perfect for weighing these options"
+                    return "15 minutes recommended for thorough consideration"
+                  })()}
+                </p>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Action Buttons */}
         {!isTimerActive ? (
-          <button
+          <motion.button
             type="submit"
-            className="w-full bg-blue-600 text-white py-4 rounded-lg text-xl font-semibold hover:bg-blue-700 transition-colors"
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-5 rounded-2xl text-xl font-bold shadow-xl hover:shadow-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            disabled={!getValues('question')?.trim() || (pros.length === 0 && cons.length === 0)}
           >
-            Start Decision Timer
-          </button>
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"
+              initial={{ x: '-100%' }}
+              whileHover={{ x: '100%' }}
+              transition={{ duration: 0.6 }}
+            />
+            <div className="relative flex items-center justify-center gap-3">
+              <span className="text-2xl">🚀</span>
+              <span>Start Decision Timer</span>
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+              >
+                <span className="text-2xl">⏰</span>
+              </motion.div>
+            </div>
+          </motion.button>
         ) : (
           <div className="space-y-3">
             <p className="text-center text-gray-600">Timer is running. You can make a decision now or wait for auto-decision.</p>
