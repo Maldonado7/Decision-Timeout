@@ -39,8 +39,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
   const [timeRemaining, setTimeRemaining] = useState(0)
   const [decisionResult, setDecisionResult] = useState<'YES' | 'NO' | null>(null)
   const [showResult, setShowResult] = useState(false)
-  const [showConfidenceRating, setShowConfidenceRating] = useState(false)
-  const [confidenceLevel, setConfidenceLevel] = useState<number | null>(null)
+  // Removed confidence rating - goes directly to result
   const [toasts, setToasts] = useState<ToastMessage[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
@@ -191,7 +190,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
           result,
           locked_until: lockedUntil.toISOString(),
           time_saved: timerMinutes
-          // TODO: Add confidence_level: confidenceLevel after running the migration
+          // No confidence level needed - decision is what matters
         })
         .select()
         .single()
@@ -278,9 +277,10 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
     
     console.log('AUTO-DECISION made:', result, 'Pros:', currentPros.length, 'Cons:', currentCons.length)
     setDecisionResult(result)
-    setShowConfidenceRating(true)
+    setShowResult(true)
     setIsTimerActive(false)
     localStorage.removeItem(`decision-timer-${userId}`) // Clear saved state
+    saveDecision(result)
   }
 
   const startTimer = (data: DecisionForm) => {
@@ -319,70 +319,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
-  const handleConfidenceSubmit = (confidence: number) => {
-    console.log('Submitting confidence:', confidence, 'for decision:', decisionResult)
-    setConfidenceLevel(confidence)
-    setShowConfidenceRating(false)
-    setShowResult(true)
-    if (decisionResult) {
-      saveDecision(decisionResult)
-    }
-  }
-
-  // Minimalist Confidence Rating Screen
-  if (showConfidenceRating && decisionResult) {
-    console.log('🔍 CONFIDENCE SCREEN - Decision Result:', decisionResult)
-    console.log('🔍 CONFIDENCE SCREEN - Decision State:', { decisionResult, showConfidenceRating, isTimerActive })
-    
-    return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="max-w-md mx-auto text-center py-6"
-      >
-        <div className="bg-white/90 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/20">
-          
-          {/* Decision Display with Debug Info */}
-          <div className="mb-5">
-            <div className="text-3xl mb-2">{decisionResult === 'YES' ? '🚀' : '🛡️'}</div>
-            <div className="text-lg font-bold text-gray-800">
-              Decision: <span className={`px-3 py-1 rounded-lg text-white ${decisionResult === 'YES' ? 'bg-green-500' : 'bg-red-500'}`}>
-                {decisionResult}
-              </span>
-            </div>
-            {/* Debug display */}
-            <div className="text-xs text-gray-400 mt-1">Debug: {decisionResult}</div>
-          </div>
-
-          {/* Minimalist Confidence Scale */}
-          <div className="mb-4">
-            <p className="text-sm text-gray-600 mb-3">Rate your confidence:</p>
-            <div className="grid grid-cols-10 gap-1">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
-                <motion.button
-                  key={rating}
-                  onClick={() => handleConfidenceSubmit(rating)}
-                  className={`h-10 rounded-lg font-bold text-white text-sm transition-all duration-200 ${
-                    rating <= 3 ? 'bg-red-400 hover:bg-red-500' 
-                    : rating <= 7 ? 'bg-yellow-400 hover:bg-yellow-500' 
-                    : 'bg-green-500 hover:bg-green-600'
-                  }`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {rating}
-                </motion.button>
-              ))}
-            </div>
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>Low</span>
-              <span>High</span>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-    )
-  }
+  // Removed confidence rating - decision goes directly to result with psychological reinforcement
 
   if (showResult) {
     // Decision-specific psychological reinforcement messages
@@ -445,34 +382,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
           </div>
         </motion.div>
 
-        {confidenceLevel && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5 }}
-            className="mb-4 bg-indigo-50 rounded-lg p-4 border border-indigo-200"
-          >
-            <div className="flex items-center justify-center gap-3">
-              <span className="text-indigo-600 font-medium">Confidence Level:</span>
-              <div className="flex gap-1">
-                {[...Array(10)].map((_, i) => (
-                  <div
-                    key={i}
-                    className={`w-3 h-3 rounded-full ${
-                      i < confidenceLevel! ? 'bg-indigo-500' : 'bg-gray-300'
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="text-indigo-700 font-bold">{confidenceLevel}/10</span>
-            </div>
-            <p className="text-xs text-indigo-600 text-center mt-2">
-              {confidenceLevel <= 3 ? "Low confidence - consider reviewing this decision in the future" 
-               : confidenceLevel <= 7 ? "Moderate confidence - you've made a reasoned choice"
-               : "High confidence - you feel very sure about this decision"}
-            </p>
-          </motion.div>
-        )}
+        {/* Confidence tracking removed - focus on decision commitment */}
 
         <motion.div 
           initial={{ opacity: 0 }}
@@ -875,10 +785,11 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
                 onClick={() => {
                   console.log('🟢 MANUAL YES CLICKED at', new Date().toISOString())
                   setDecisionResult('YES')
-                  setShowConfidenceRating(true)
+                  setShowResult(true)
                   setIsTimerActive(false)
                   localStorage.removeItem(`decision-timer-${userId}`)
-                  console.log('🟢 MANUAL YES - State set to YES')
+                  saveDecision('YES')
+                  console.log('🟢 MANUAL YES - Going directly to result')
                 }}
                 className="flex-1 bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors"
               >
@@ -889,10 +800,11 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
                 onClick={() => {
                   console.log('🔴 MANUAL NO CLICKED at', new Date().toISOString())
                   setDecisionResult('NO')
-                  setShowConfidenceRating(true)
+                  setShowResult(true)
                   setIsTimerActive(false)
                   localStorage.removeItem(`decision-timer-${userId}`)
-                  console.log('🔴 MANUAL NO - State set to NO')
+                  saveDecision('NO')
+                  console.log('🔴 MANUAL NO - Going directly to result')
                 }}
                 className="flex-1 bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors"
               >
