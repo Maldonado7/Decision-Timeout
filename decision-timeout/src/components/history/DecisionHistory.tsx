@@ -199,7 +199,7 @@ export default function DecisionHistory({ userId }: DecisionHistoryProps) {
             </div>
             
             <div className="text-sm text-yellow-700 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-              🚧 If decisions aren't saving, you may need to run the database setup script. Check QUICK_FIX_README.md for instructions.
+              🚧 If decisions aren&apos;t saving, you may need to run the database setup script. Check QUICK_FIX_README.md for instructions.
             </div>
           </div>
         </motion.div>

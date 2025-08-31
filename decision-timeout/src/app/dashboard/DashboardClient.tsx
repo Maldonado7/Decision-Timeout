@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import DecisionCreator from '@/components/decision/DecisionCreator'
+import PWAInstallPrompt from '@/components/PWAInstallPrompt'
 import { Decision } from '@/lib/supabase'
 
 interface DashboardClientProps {
@@ -161,9 +162,12 @@ export default function DashboardClient({ userId }: DashboardClientProps) {
   }
 
   return (
-    <DecisionCreator 
-      userId={userId}
-      onDecisionComplete={handleDecisionComplete}
-    />
+    <>
+      <DecisionCreator 
+        userId={userId}
+        onDecisionComplete={handleDecisionComplete}
+      />
+      <PWAInstallPrompt />
+    </>
   )
 }

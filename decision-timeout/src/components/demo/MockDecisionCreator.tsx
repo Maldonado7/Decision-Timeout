@@ -1,8 +1,7 @@
 'use client'
 
 // Demo version that works without database - for testing UI only
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect, useCallback } from 'react'
 
 export default function MockDecisionCreator() {
   const [pros, setPros] = useState<string[]>([])
@@ -17,6 +16,22 @@ export default function MockDecisionCreator() {
   const [showResult, setShowResult] = useState(false)
   const [showConfidenceRating, setShowConfidenceRating] = useState(false)
   const [confidenceLevel, setConfidenceLevel] = useState<number | null>(null)
+
+  const makeAutoDecision = useCallback(() => {
+    let result: 'YES' | 'NO'
+    
+    if (pros.length > cons.length) {
+      result = 'YES'
+    } else if (cons.length > pros.length) {
+      result = 'NO'
+    } else {
+      result = Math.random() < 0.5 ? 'YES' : 'NO'
+    }
+    
+    setDecisionResult(result)
+    setShowConfidenceRating(true)
+    setIsTimerActive(false)
+  }, [pros.length, cons.length])
 
   // Timer logic
   useEffect(() => {
@@ -33,7 +48,7 @@ export default function MockDecisionCreator() {
       }, 1000)
     }
     return () => clearInterval(interval)
-  }, [isTimerActive, timeRemaining])
+  }, [isTimerActive, timeRemaining, makeAutoDecision])
 
   const addPro = () => {
     if (currentPro.trim() && pros.length < 5) {
@@ -47,22 +62,6 @@ export default function MockDecisionCreator() {
       setCons([...cons, currentCon.trim()])
       setCurrentCon('')
     }
-  }
-
-  const makeAutoDecision = () => {
-    let result: 'YES' | 'NO'
-    
-    if (pros.length > cons.length) {
-      result = 'YES'
-    } else if (cons.length > pros.length) {
-      result = 'NO'
-    } else {
-      result = Math.random() < 0.5 ? 'YES' : 'NO'
-    }
-    
-    setDecisionResult(result)
-    setShowConfidenceRating(true)
-    setIsTimerActive(false)
   }
 
   const startTimer = (e: React.FormEvent) => {
