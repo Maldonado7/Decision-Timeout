@@ -12,131 +12,131 @@ export default async function Home() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-md border-b border-slate-100 px-6 py-4 z-50">
+      <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-md border-b border-slate-100 px-4 py-3 md:px-6 md:py-4 z-50">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-slate-900 rounded-lg md:rounded-xl flex items-center justify-center">
+              <svg className="w-4 h-4 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <span className="text-xl font-semibold text-slate-900">Decision Timeout</span>
+            <span className="text-base md:text-xl font-semibold text-slate-900">Decision Timeout</span>
           </div>
           <div className="hidden md:flex items-center gap-8">
             <a href="#how-it-works" className="text-slate-600 hover:text-slate-900 transition-colors">How it works</a>
             <a href="#pricing" className="text-slate-600 hover:text-slate-900 transition-colors">Pricing</a>
             <a href="#faq" className="text-slate-600 hover:text-slate-900 transition-colors">FAQ</a>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             <Link 
               href="/sign-in"
-              className="text-slate-700 hover:text-slate-900 font-medium transition-colors"
+              className="text-sm md:text-base text-slate-700 hover:text-slate-900 font-medium transition-colors"
             >
               Log in
             </Link>
             <Link 
               href="/sign-up"
-              className="bg-slate-900 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-slate-800 transition-colors"
+              className="bg-slate-900 text-white px-3 py-2 md:px-5 md:py-2.5 rounded-lg text-sm md:text-base font-medium hover:bg-slate-800 transition-colors"
             >
-              Try it free
+              Try free
             </Link>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-16 px-6">
+      <section className="pt-24 md:pt-32 pb-12 md:pb-16 px-4 md:px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center">
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-slate-900 leading-tight mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold text-slate-900 leading-tight mb-4 md:mb-6">
               Make decisions
               <span className="block text-slate-500">without the paralysis</span>
             </h1>
             
-            <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto">
+            <p className="text-base md:text-lg lg:text-xl text-slate-600 mb-8 md:mb-10 max-w-2xl mx-auto px-4">
               Stop overthinking. Set a timer, evaluate options, and commit. 
               A simple tool for decisive action.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center mb-8 md:mb-12 px-4">
               <Link
                 href="/sign-up"
-                className="inline-flex items-center justify-center px-8 py-4 bg-slate-900 text-white font-semibold rounded-lg hover:bg-slate-800 transition-colors"
+                className="inline-flex items-center justify-center px-6 py-3 md:px-8 md:py-4 bg-slate-900 text-white font-semibold rounded-lg hover:bg-slate-800 transition-colors text-sm md:text-base"
               >
                 Start deciding now →
               </Link>
               <Link
                 href="/demo"
-                className="inline-flex items-center justify-center px-8 py-4 bg-white text-slate-700 font-semibold rounded-lg border border-slate-300 hover:bg-slate-50 transition-colors"
+                className="inline-flex items-center justify-center px-6 py-3 md:px-8 md:py-4 bg-white text-slate-700 font-semibold rounded-lg border border-slate-300 hover:bg-slate-50 transition-colors text-sm md:text-base"
               >
                 Try demo
               </Link>
             </div>
 
-            <div className="flex justify-center items-center gap-8 text-sm text-slate-500">
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 md:gap-8 text-xs md:text-sm text-slate-500">
               <span>✓ Free to start</span>
-              <span>✓ No signup required for demo</span>
+              <span className="hidden sm:inline">✓ No signup required for demo</span>
               <span>✓ 2-minute setup</span>
             </div>
           </div>
 
           {/* Hero Visual */}
-          <div className="mt-16 max-w-4xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-              <div className="bg-slate-900 text-white p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">Should I accept this job offer?</h3>
-                  <span className="text-sm bg-slate-800 px-3 py-1 rounded-full">High stakes</span>
+          <div className="mt-12 md:mt-16 max-w-4xl mx-auto px-4">
+            <div className="bg-white rounded-xl md:rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+              <div className="bg-slate-900 text-white p-4 md:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3 md:mb-4">
+                  <h3 className="text-sm md:text-lg font-semibold">Should I accept this job offer?</h3>
+                  <span className="text-xs md:text-sm bg-slate-800 px-2 md:px-3 py-1 rounded-full inline-block w-fit">High stakes</span>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-3xl font-bold">5:00</div>
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div className="text-2xl md:text-3xl font-bold">5:00</div>
                   <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-green-500 to-yellow-500 rounded-full" style={{width: '60%'}}></div>
                   </div>
                 </div>
               </div>
-              <div className="p-6">
-                <div className="grid md:grid-cols-2 gap-6">
+              <div className="p-4 md:p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   <div>
-                    <h4 className="font-semibold text-green-600 mb-3">Pros</h4>
-                    <ul className="space-y-2">
+                    <h4 className="font-semibold text-green-600 mb-2 md:mb-3 text-sm md:text-base">Pros</h4>
+                    <ul className="space-y-1 md:space-y-2">
                       <li className="flex items-start gap-2">
-                        <span className="text-green-500 mt-1">+</span>
-                        <span className="text-slate-600">30% salary increase</span>
+                        <span className="text-green-500 mt-0.5 md:mt-1 text-sm">+</span>
+                        <span className="text-slate-600 text-sm md:text-base">30% salary increase</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-green-500 mt-1">+</span>
-                        <span className="text-slate-600">Remote work flexibility</span>
+                        <span className="text-green-500 mt-0.5 md:mt-1 text-sm">+</span>
+                        <span className="text-slate-600 text-sm md:text-base">Remote work flexibility</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-green-500 mt-1">+</span>
-                        <span className="text-slate-600">Better growth opportunities</span>
+                        <span className="text-green-500 mt-0.5 md:mt-1 text-sm">+</span>
+                        <span className="text-slate-600 text-sm md:text-base">Better growth opportunities</span>
                       </li>
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-red-600 mb-3">Cons</h4>
-                    <ul className="space-y-2">
+                    <h4 className="font-semibold text-red-600 mb-2 md:mb-3 text-sm md:text-base">Cons</h4>
+                    <ul className="space-y-1 md:space-y-2">
                       <li className="flex items-start gap-2">
-                        <span className="text-red-500 mt-1">-</span>
-                        <span className="text-slate-600">Longer commute</span>
+                        <span className="text-red-500 mt-0.5 md:mt-1 text-sm">-</span>
+                        <span className="text-slate-600 text-sm md:text-base">Longer commute</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-red-500 mt-1">-</span>
-                        <span className="text-slate-600">Unknown team culture</span>
+                        <span className="text-red-500 mt-0.5 md:mt-1 text-sm">-</span>
+                        <span className="text-slate-600 text-sm md:text-base">Unknown team culture</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-red-500 mt-1">-</span>
-                        <span className="text-slate-600">Less PTO initially</span>
+                        <span className="text-red-500 mt-0.5 md:mt-1 text-sm">-</span>
+                        <span className="text-slate-600 text-sm md:text-base">Less PTO initially</span>
                       </li>
                     </ul>
                   </div>
                 </div>
-                <div className="mt-6 flex gap-4">
-                  <button className="flex-1 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors">
+                <div className="mt-4 md:mt-6 flex gap-3 md:gap-4">
+                  <button className="flex-1 py-2.5 md:py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors text-sm md:text-base">
                     Accept Offer
                   </button>
-                  <button className="flex-1 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors">
+                  <button className="flex-1 py-2.5 md:py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors text-sm md:text-base">
                     Decline Offer
                   </button>
                 </div>
@@ -147,44 +147,44 @@ export default async function Home() {
       </section>
 
       {/* How It Works Section */}
-      <section id="how-it-works" className="py-20 bg-white">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-slate-900 mb-4">
+      <section id="how-it-works" className="py-12 md:py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-4 md:px-6">
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 mb-3 md:mb-4">
               Three simple steps
             </h2>
-            <p className="text-xl text-slate-600">
+            <p className="text-base md:text-lg lg:text-xl text-slate-600">
               From paralysis to decision in minutes
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
             <div className="text-center">
-              <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl font-bold text-slate-900">1</span>
+              <div className="w-12 h-12 md:w-16 md:h-16 bg-slate-100 rounded-xl md:rounded-2xl flex items-center justify-center mx-auto mb-4 md:mb-6">
+                <span className="text-xl md:text-2xl font-bold text-slate-900">1</span>
               </div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-3">Frame your decision</h3>
-              <p className="text-slate-600">
+              <h3 className="text-lg md:text-xl font-semibold text-slate-900 mb-2 md:mb-3">Frame your decision</h3>
+              <p className="text-sm md:text-base text-slate-600 px-4 md:px-0">
                 Define what you&apos;re deciding, list your options, and identify pros and cons for each choice.
               </p>
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl font-bold text-slate-900">2</span>
+              <div className="w-12 h-12 md:w-16 md:h-16 bg-slate-100 rounded-xl md:rounded-2xl flex items-center justify-center mx-auto mb-4 md:mb-6">
+                <span className="text-xl md:text-2xl font-bold text-slate-900">2</span>
               </div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-3">Set your timer</h3>
-              <p className="text-slate-600">
+              <h3 className="text-lg md:text-xl font-semibold text-slate-900 mb-2 md:mb-3">Set your timer</h3>
+              <p className="text-sm md:text-base text-slate-600 px-4 md:px-0">
                 Choose how much time you need. The countdown creates urgency and prevents endless deliberation.
               </p>
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl font-bold text-slate-900">3</span>
+              <div className="w-12 h-12 md:w-16 md:h-16 bg-slate-100 rounded-xl md:rounded-2xl flex items-center justify-center mx-auto mb-4 md:mb-6">
+                <span className="text-xl md:text-2xl font-bold text-slate-900">3</span>
               </div>
-              <h3 className="text-xl font-semibold text-slate-900 mb-3">Commit and move on</h3>
-              <p className="text-slate-600">
+              <h3 className="text-lg md:text-xl font-semibold text-slate-900 mb-2 md:mb-3">Commit and move on</h3>
+              <p className="text-sm md:text-base text-slate-600 px-4 md:px-0">
                 When time&apos;s up, make your choice. Save it to review later and learn from your decisions.
               </p>
             </div>
@@ -193,24 +193,24 @@ export default async function Home() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 bg-slate-50">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-slate-900 mb-4">
+      <section id="pricing" className="py-12 md:py-20 bg-slate-50">
+        <div className="max-w-6xl mx-auto px-4 md:px-6">
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 mb-3 md:mb-4">
               Simple, transparent pricing
             </h2>
-            <p className="text-xl text-slate-600">
+            <p className="text-base md:text-lg lg:text-xl text-slate-600">
               Start free, upgrade when you need more
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-3xl mx-auto">
             {/* Free Plan */}
-            <div className="bg-white rounded-2xl p-8 border border-slate-200">
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">Free</h3>
-              <div className="mb-6">
-                <span className="text-4xl font-bold text-slate-900">$0</span>
-                <span className="text-slate-600">/month</span>
+            <div className="bg-white rounded-xl md:rounded-2xl p-6 md:p-8 border border-slate-200">
+              <h3 className="text-lg md:text-xl font-semibold text-slate-900 mb-2">Free</h3>
+              <div className="mb-4 md:mb-6">
+                <span className="text-3xl md:text-4xl font-bold text-slate-900">$0</span>
+                <span className="text-sm md:text-base text-slate-600">/month</span>
               </div>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start gap-3">
@@ -244,14 +244,14 @@ export default async function Home() {
             </div>
 
             {/* Pro Plan */}
-            <div className="bg-slate-900 text-white rounded-2xl p-8 relative">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-green-600 text-white text-sm px-3 py-1 rounded-full">
+            <div className="bg-slate-900 text-white rounded-xl md:rounded-2xl p-6 md:p-8 relative">
+              <div className="absolute -top-3 md:-top-4 left-1/2 -translate-x-1/2 bg-green-600 text-white text-xs md:text-sm px-2 md:px-3 py-1 rounded-full">
                 Most popular
               </div>
-              <h3 className="text-xl font-semibold mb-2">Pro</h3>
-              <div className="mb-6">
-                <span className="text-4xl font-bold">$9</span>
-                <span className="text-slate-400">/month</span>
+              <h3 className="text-lg md:text-xl font-semibold mb-2">Pro</h3>
+              <div className="mb-4 md:mb-6">
+                <span className="text-3xl md:text-4xl font-bold">$9</span>
+                <span className="text-sm md:text-base text-slate-400">/month</span>
               </div>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start gap-3">

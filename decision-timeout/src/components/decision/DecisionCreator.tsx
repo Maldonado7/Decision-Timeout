@@ -798,7 +798,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
                     duration: isFinalCountdown ? 0.2 : 0.4,
                     repeat: (isFinalCountdown || isVeryLowTime) ? Infinity : 0
                   }}
-                  className={`text-7xl md:text-8xl lg:text-9xl font-mono font-bold mb-4 transition-colors duration-300 ${
+                  className={`text-5xl md:text-7xl lg:text-9xl font-mono font-bold mb-4 transition-colors duration-300 ${
                     isFinalCountdown ? 'text-red-600' : 
                     isVeryLowTime ? 'text-orange-500' : 
                     isLowTime ? 'text-yellow-600' : 
@@ -1022,8 +1022,8 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
               transition={{ type: "spring", delay: 0.2 }}
               className="mb-8"
             >
-              <div className="text-6xl mb-4">🎯</div>
-              <h1 className="text-4xl font-bold text-gray-800 mb-3">
+              <div className="text-4xl md:text-6xl mb-4">🎯</div>
+              <h1 className="text-2xl md:text-4xl font-bold text-gray-800 mb-3">
                 How confident are you?
               </h1>
               <p className="text-xl text-gray-600 mb-2">
@@ -1049,7 +1049,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
                     <motion.button
                       key={rating}
                       onClick={() => setConfidenceRating(rating)}
-                      className={`text-6xl md:text-7xl p-2 rounded-xl transition-all duration-200 touch-manipulation min-w-[60px] min-h-[60px] md:min-w-[80px] md:min-h-[80px] flex items-center justify-center ${
+                      className={`text-4xl md:text-6xl lg:text-7xl p-2 rounded-xl transition-all duration-200 touch-manipulation min-w-[50px] min-h-[50px] md:min-w-[80px] md:min-h-[80px] flex items-center justify-center ${
                         confidenceRating && rating <= confidenceRating
                           ? 'text-yellow-400 scale-110 bg-yellow-50'
                           : 'text-gray-300 hover:text-yellow-300 hover:scale-105 hover:bg-yellow-25 active:bg-yellow-50'
@@ -1129,8 +1129,8 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
               transition={{ type: "spring", delay: 0.2 }}
               className="mb-8"
             >
-              <div className="text-6xl mb-4">🎉</div>
-              <h1 className="text-4xl font-bold text-gray-800 mb-3">
+              <div className="text-4xl md:text-6xl mb-4">🎉</div>
+              <h1 className="text-2xl md:text-4xl font-bold text-gray-800 mb-3">
                 Great job avoiding overthinking!
               </h1>
               <p className="text-xl text-gray-600">
@@ -1160,7 +1160,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <div className="text-3xl md:text-4xl mb-2">✅</div>
+                  <div className="text-2xl md:text-4xl mb-2">✅</div>
                   <div className="font-bold">YES</div>
                   <div className="text-sm opacity-90">I&apos;ll do it</div>
                 </motion.button>
@@ -1174,7 +1174,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <div className="text-3xl md:text-4xl mb-2">❌</div>
+                  <div className="text-2xl md:text-4xl mb-2">❌</div>
                   <div className="font-bold">NO</div>
                   <div className="text-sm opacity-90">I won&apos;t do it</div>
                 </motion.button>
@@ -1188,7 +1188,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <div className="text-3xl md:text-4xl mb-2">🤔</div>
+                  <div className="text-2xl md:text-4xl mb-2">🤔</div>
                   <div className="font-bold">MAYBE</div>
                   <div className="text-sm opacity-90">Need more time</div>
                 </motion.button>
@@ -1241,13 +1241,13 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
           animate={{ y: 0 }}
           className="mb-6"
         >
-          <div className={`text-6xl mb-4`}>
+          <div className={`text-4xl md:text-6xl mb-4`}>
             {currentMessage.emoji}
           </div>
           <div className="text-lg font-semibold text-purple-600 mb-2">
             {currentMessage.celebration}
           </div>
-          <h1 className={`text-4xl font-bold bg-gradient-to-r ${currentMessage.gradient} bg-clip-text text-transparent mb-2`}>
+          <h1 className={`text-2xl md:text-4xl font-bold bg-gradient-to-r ${currentMessage.gradient} bg-clip-text text-transparent mb-2`}>
             {currentMessage.title}
           </h1>
           <h2 className="text-xl text-gray-600 font-medium">
@@ -1486,7 +1486,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
               {/* Header Section with Clear Value Proposition */}
               <div className="text-center space-y-8 mb-16">
                 <motion.h1 
-                  className="text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-purple-600 via-blue-500 to-teal-400 bg-clip-text text-transparent leading-tight"
+                  className="text-2xl md:text-4xl lg:text-6xl font-bold bg-gradient-to-r from-purple-600 via-blue-500 to-teal-400 bg-clip-text text-transparent leading-tight"
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.2, duration: 0.6 }}
@@ -1563,7 +1563,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
                 transition={{ delay: 1.0, duration: 0.6 }}
                 className="text-center mb-12"
               >
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
+                <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
                   Choose Your Decision Type
                 </h2>
                 <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
@@ -1606,7 +1606,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
                         <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         
                         <div className="relative z-10">
-                          <div className="text-6xl md:text-7xl mb-4 group-hover:scale-110 transition-transform duration-300">
+                          <div className="text-4xl md:text-6xl lg:text-7xl mb-4 group-hover:scale-110 transition-transform duration-300">
                             {template.icon}
                           </div>
                           <h3 className="text-xl md:text-2xl font-bold text-white mb-3 drop-shadow-sm">
@@ -1652,7 +1652,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
                         whileHover={{ scale: 1.02, y: -2 }}
                         whileTap={{ scale: 0.96 }}
                       >
-                        <div className="text-5xl md:text-6xl mb-4 group-hover:scale-110 transition-transform duration-200">
+                        <div className="text-3xl md:text-5xl lg:text-6xl mb-4 group-hover:scale-110 transition-transform duration-200">
                           {template.icon}
                         </div>
                         <h3 className="text-lg md:text-xl font-bold text-white mb-2 drop-shadow-sm">
@@ -1697,7 +1697,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
                         whileHover={{ scale: 1.02, y: -2 }}
                         whileTap={{ scale: 0.96 }}
                       >
-                        <div className="text-5xl md:text-6xl mb-4 group-hover:scale-110 transition-transform duration-200">
+                        <div className="text-3xl md:text-5xl lg:text-6xl mb-4 group-hover:scale-110 transition-transform duration-200">
                           {template.icon}
                         </div>
                         <h3 className="text-lg md:text-xl font-bold text-white mb-2 drop-shadow-sm">
@@ -1746,7 +1746,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
                         whileHover={{ scale: 1.02, y: -2 }}
                         whileTap={{ scale: 0.96 }}
                       >
-                        <div className="text-5xl md:text-6xl mb-4 group-hover:scale-110 transition-transform duration-200">
+                        <div className="text-3xl md:text-5xl lg:text-6xl mb-4 group-hover:scale-110 transition-transform duration-200">
                           {template.icon}
                         </div>
                         <h3 className="text-lg md:text-xl font-bold text-gray-800 mb-2">
@@ -2005,7 +2005,7 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
             animate={{ scale: 1 }}
             className="text-center py-4"
           >
-            <div className="text-6xl font-mono font-bold text-blue-600 mb-2">
+            <div className="text-4xl md:text-6xl font-mono font-bold text-blue-600 mb-2">
               {formatTime(timeRemaining)}
             </div>
             <p className="text-gray-600">Time remaining to decide</p>

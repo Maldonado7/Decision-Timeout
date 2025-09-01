@@ -135,7 +135,7 @@ export default function DecisionHistory({ userId }: DecisionHistoryProps) {
     return (
       <div className="max-w-6xl mx-auto p-6">
         <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-          <div className="text-4xl mb-4">⚠️</div>
+          <div className="text-3xl md:text-4xl mb-4">⚠️</div>
           <h2 className="text-xl font-semibold text-red-800 mb-2">Error Loading History</h2>
           <p className="text-red-600 mb-4">{error}</p>
           <button
@@ -162,8 +162,8 @@ export default function DecisionHistory({ userId }: DecisionHistoryProps) {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl p-12 text-center border border-white/20"
         >
-          <div className="text-6xl mb-6">🤔</div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">
+          <div className="text-4xl md:text-6xl mb-4 md:mb-6">🤔</div>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-4">
             No Decisions Yet
           </h2>
           <p className="text-gray-600 text-lg mb-8 max-w-md mx-auto leading-relaxed">
@@ -174,7 +174,7 @@ export default function DecisionHistory({ userId }: DecisionHistoryProps) {
           <div className="space-y-4">
             <motion.a
               href="/dashboard"
-              className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-xl hover:shadow-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
+              className="inline-flex items-center gap-2 md:gap-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 md:px-8 md:py-4 rounded-xl md:rounded-2xl font-semibold text-base md:text-lg shadow-xl hover:shadow-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -184,7 +184,7 @@ export default function DecisionHistory({ userId }: DecisionHistoryProps) {
             
             <motion.a
               href="/demo"
-              className="inline-flex items-center gap-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-xl hover:shadow-2xl hover:from-yellow-600 hover:to-orange-600 transition-all duration-300"
+              className="inline-flex items-center gap-2 md:gap-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-6 py-3 md:px-8 md:py-4 rounded-xl md:rounded-2xl font-semibold text-base md:text-lg shadow-xl hover:shadow-2xl hover:from-yellow-600 hover:to-orange-600 transition-all duration-300"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -216,7 +216,7 @@ export default function DecisionHistory({ userId }: DecisionHistoryProps) {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-xl shadow-lg p-6 text-center"
         >
-          <div className="text-3xl font-bold text-blue-600 mb-2">
+          <div className="text-2xl md:text-3xl font-bold text-blue-600 mb-2">
             {stats.totalDecisions}
           </div>
           <div className="text-gray-600">Total Decisions</div>
@@ -228,7 +228,7 @@ export default function DecisionHistory({ userId }: DecisionHistoryProps) {
           transition={{ delay: 0.1 }}
           className="bg-white rounded-xl shadow-lg p-6 text-center"
         >
-          <div className="text-3xl font-bold text-green-600 mb-2">
+          <div className="text-2xl md:text-3xl font-bold text-green-600 mb-2">
             {Math.round(stats.totalTimeSaved / 60)}h
           </div>
           <div className="text-gray-600">Time Saved</div>
@@ -240,7 +240,7 @@ export default function DecisionHistory({ userId }: DecisionHistoryProps) {
           transition={{ delay: 0.2 }}
           className="bg-white rounded-xl shadow-lg p-6 text-center"
         >
-          <div className="text-3xl font-bold text-purple-600 mb-2">
+          <div className="text-2xl md:text-3xl font-bold text-purple-600 mb-2">
             {stats.successRate}%
           </div>
           <div className="text-gray-600">Success Rate</div>
