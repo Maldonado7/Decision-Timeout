@@ -1,103 +1,36 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useState, useEffect, useCallback } from 'react'
+import { useAuth } from '@clerk/nextjs'
 import { supabase } from '@/lib/supabase'
-import { motion, AnimatePresence } from 'framer-motion'
+import { DecisionForm, DecisionTimer, DecisionResult, ProgressIndicator } from './'
+import { DecisionForm as DecisionFormData, DecisionStep, DecisionResult as DecisionResultType } from '../../types/components'
 
-interface DecisionForm {
-  question: string
-  timerMinutes: number
-}
-
-interface DecisionCreatorProps {
-  userId: string
-  onDecisionComplete: (decision: unknown) => void
-}
-
-export default function DecisionCreator({ userId, onDecisionComplete }: DecisionCreatorProps) {
+export default function DecisionCreator() {
+  const { userId } = useAuth()
+  const [currentStep, setCurrentStep] = useState<DecisionStep>('setup')
   const [pros, setPros] = useState<string[]>([])
   const [cons, setCons] = useState<string[]>([])
   const [currentPro, setCurrentPro] = useState('')
   const [currentCon, setCurrentCon] = useState('')
+  const [starredPro, setStarredPro] = useState<number | null>(null)
+  const [starredCon, setStarredCon] = useState<number | null>(null)
   const [isTimerActive, setIsTimerActive] = useState(false)
   const [timeRemaining, setTimeRemaining] = useState(0)
-  const [decisionResult, setDecisionResult] = useState<'YES' | 'NO' | null>(null)
-  const [showResult, setShowResult] = useState(false)
+  const [decisionResult, setDecisionResult] = useState<DecisionResultType>(null)
+  const [validationError, setValidationError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [currentQuestion, setCurrentQuestion] = useState('')
+  const [currentTimerMinutes, setCurrentTimerMinutes] = useState(10)
 
-  const { register, handleSubmit, formState: { errors }, getValues } = useForm<DecisionForm>({
-    defaultValues: {
-      timerMinutes: 10
-    }
-  })
 
-  const makeAutoDecision = () => {
-    let result: 'YES' | 'NO'
-    
-    if (pros.length > cons.length) {
-      result = 'YES'
-    } else if (cons.length > pros.length) {
-      result = 'NO'
-    } else {
-      // Coin flip for tie
-      result = Math.random() < 0.5 ? 'YES' : 'NO'
-    }
-    
-    setDecisionResult(result)
-    setShowResult(true)
-    setIsTimerActive(false)
-    saveDecision(result)
-  }
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout
-    if (isTimerActive && timeRemaining > 0) {
-      interval = setInterval(() => {
-        setTimeRemaining((prev) => {
-          if (prev <= 1) {
-            makeAutoDecision()
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
-    }
-    return () => clearInterval(interval)
-  }, [isTimerActive, timeRemaining, pros.length, cons.length])
-
-  const addPro = () => {
-    if (currentPro.trim() && pros.length < 5) {
-      setPros([...pros, currentPro.trim()])
-      setCurrentPro('')
-    }
-  }
-
-  const addCon = () => {
-    if (currentCon.trim() && cons.length < 5) {
-      setCons([...cons, currentCon.trim()])
-      setCurrentCon('')
-    }
-  }
-
-  const removePro = (index: number) => {
-    if (!isTimerActive) {
-      setPros(pros.filter((_, i) => i !== index))
-    }
-  }
-
-  const removeCon = (index: number) => {
-    if (!isTimerActive) {
-      setCons(cons.filter((_, i) => i !== index))
-    }
-  }
-
-  const saveDecision = async (result: 'YES' | 'NO') => {
-    const { question, timerMinutes } = getValues()
+  const saveDecision = useCallback(async (result: 'YES' | 'NO', question: string, timerMinutes: number) => {
     const lockedUntil = new Date()
     lockedUntil.setDate(lockedUntil.getDate() + 30)
 
+    setIsLoading(true)
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('decisions')
         .insert({
           user_id: userId,
@@ -112,21 +45,147 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
         .single()
 
       if (error) throw error
-      onDecisionComplete(data)
     } catch (error) {
       console.error('Error saving decision:', error)
+      setValidationError('Failed to save decision. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [userId, pros, cons])
+
+  const makeAutoDecision = useCallback((question: string, timerMinutes: number) => {
+    let result: 'YES' | 'NO'
+    
+    // Factor in starred items (they count double)
+    const prosWeight = pros.length + (starredPro !== null ? 1 : 0)
+    const consWeight = cons.length + (starredCon !== null ? 1 : 0)
+    
+    if (prosWeight > consWeight) {
+      result = 'YES'
+    } else if (consWeight > prosWeight) {
+      result = 'NO'
+    } else {
+      result = Math.random() < 0.5 ? 'YES' : 'NO'
+    }
+    
+    setDecisionResult(result)
+    setCurrentStep('result')
+    setIsTimerActive(false)
+    saveDecision(result, question, timerMinutes)
+  }, [pros.length, cons.length, starredPro, starredCon, saveDecision])
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    if (isTimerActive && timeRemaining > 0) {
+      interval = setInterval(() => {
+        setTimeRemaining((prev) => {
+          if (prev <= 1) {
+            makeAutoDecision(currentQuestion, currentTimerMinutes)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    }
+    return () => clearInterval(interval)
+  }, [isTimerActive, timeRemaining, makeAutoDecision, currentQuestion, currentTimerMinutes])
+
+  const addPro = useCallback(() => {
+    if (currentPro.trim() && pros.length < 5) {
+      setPros([...pros, currentPro.trim()])
+      setCurrentPro('')
+      setValidationError('')
+    }
+  }, [currentPro, pros])
+
+  const addCon = useCallback(() => {
+    if (currentCon.trim() && cons.length < 5) {
+      setCons([...cons, currentCon.trim()])
+      setCurrentCon('')
+      setValidationError('')
+    }
+  }, [currentCon, cons])
+
+  const removePro = (index: number) => {
+    if (!isTimerActive) {
+      setPros(pros.filter((_, i) => i !== index))
+      // Adjust starred index if needed
+      if (starredPro === index) {
+        setStarredPro(null)
+      } else if (starredPro !== null && starredPro > index) {
+        setStarredPro(starredPro - 1)
+      }
     }
   }
 
-  const startTimer = (data: DecisionForm) => {
+  const removeCon = (index: number) => {
+    if (!isTimerActive) {
+      setCons(cons.filter((_, i) => i !== index))
+      // Adjust starred index if needed
+      if (starredCon === index) {
+        setStarredCon(null)
+      } else if (starredCon !== null && starredCon > index) {
+        setStarredCon(starredCon - 1)
+      }
+    }
+  }
+
+  const startTimer = (data: DecisionFormData) => {
     if (pros.length === 0 && cons.length === 0) {
-      alert('Add at least one pro or con before starting the timer!')
+      setValidationError('Add at least one pro or con before starting the timer!')
       return
     }
     
+    setValidationError('')
+    setCurrentQuestion(data.question)
+    setCurrentTimerMinutes(data.timerMinutes)
     setTimeRemaining(data.timerMinutes * 60)
     setIsTimerActive(true)
+    setCurrentStep('timer')
   }
+
+  const cancelTimer = () => {
+    setIsTimerActive(false)
+    setCurrentStep('setup')
+    setTimeRemaining(0)
+  }
+
+  const resetDecision = () => {
+    setCurrentStep('setup')
+    setDecisionResult(null)
+    setIsTimerActive(false)
+    setTimeRemaining(0)
+    setPros([])
+    setCons([])
+    setCurrentPro('')
+    setCurrentCon('')
+    setStarredPro(null)
+    setStarredCon(null)
+    setValidationError('')
+    setCurrentQuestion('')
+    setCurrentTimerMinutes(10)
+  }
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isTimerActive) {
+        cancelTimer()
+      }
+      if (e.key === 'Enter' && e.ctrlKey) {
+        if (currentStep === 'setup' && currentPro) {
+          e.preventDefault()
+          addPro()
+        } else if (currentStep === 'setup' && currentCon) {
+          e.preventDefault()
+          addCon()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isTimerActive, currentStep, currentPro, currentCon, addPro, addCon])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -134,199 +193,81 @@ export default function DecisionCreator({ userId, onDecisionComplete }: Decision
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
-  if (showResult) {
+  const getDecisionLogic = useCallback(() => {
+    const prosWeight = pros.length + (starredPro !== null ? 1 : 0)
+    const consWeight = cons.length + (starredCon !== null ? 1 : 0)
+    
+    const starredText = (starredPro !== null || starredCon !== null) 
+      ? ' (starred items count double)' 
+      : ''
+    
+    if (prosWeight > consWeight) {
+      return `More pros than cons (${prosWeight} vs ${consWeight})${starredText}`
+    } else if (consWeight > prosWeight) {
+      return `More cons than pros (${consWeight} vs ${prosWeight})${starredText}`
+    } else {
+      return `Tied pros and cons (${prosWeight} vs ${consWeight})${starredText} - coin flip`
+    }
+  }, [pros.length, cons.length, starredPro, starredCon])
+
+
+
+  const handleViewHistory = () => {
+    window.location.href = '/history'
+  }
+
+  if (currentStep === 'result') {
     return (
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="text-center py-12"
-      >
-        <motion.div
-          initial={{ y: -50 }}
-          animate={{ y: 0 }}
-          className={`text-6xl font-bold mb-4 ${
-            decisionResult === 'YES' ? 'text-green-500' : 'text-red-500'
-          }`}
-        >
-          DECISION MADE
-        </motion.div>
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.5 }}
-          className={`text-8xl font-black ${
-            decisionResult === 'YES' ? 'text-green-600' : 'text-red-600'
-          }`}
-        >
-          {decisionResult}
-        </motion.div>
-        <p className="text-gray-600 mt-6 text-lg">
-          This decision is locked for 30 days
-        </p>
-      </motion.div>
+      <div className="space-y-6">
+        <ProgressIndicator currentStep={currentStep} />
+        <DecisionResult 
+          result={decisionResult!}
+          decisionLogic={getDecisionLogic()}
+          onReset={resetDecision}
+          onViewHistory={handleViewHistory}
+        />
+      </div>
+    )
+  }
+
+  if (currentStep === 'timer') {
+    return (
+      <div className="space-y-6">
+        <ProgressIndicator currentStep={currentStep} />
+        <DecisionTimer 
+          timeRemaining={timeRemaining}
+          pros={pros}
+          cons={cons}
+          onCancel={cancelTimer}
+          formatTime={formatTime}
+        />
+      </div>
     )
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <form onSubmit={handleSubmit(startTimer)} className="space-y-6">
-        {/* Question Input */}
-        <div>
-          <label className="block text-lg font-semibold mb-2">
-            What decision do you need to make?
-          </label>
-          <input
-            {...register('question', { required: 'Question is required' })}
-            disabled={isTimerActive}
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-lg disabled:bg-gray-100"
-            placeholder="Should I build this feature?"
-          />
-          {errors.question && (
-            <p className="text-red-500 mt-1">{errors.question.message}</p>
-          )}
-        </div>
-
-        {/* Timer Display */}
-        {isTimerActive && (
-          <motion.div
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            className="text-center py-4"
-          >
-            <div className="text-6xl font-mono font-bold text-blue-600 mb-2">
-              {formatTime(timeRemaining)}
-            </div>
-            <p className="text-gray-600">Time remaining to decide</p>
-          </motion.div>
-        )}
-
-        {/* Pros Section */}
-        <div>
-          <h3 className="text-xl font-semibold text-green-600 mb-3">
-            Pros ({pros.length}/5)
-          </h3>
-          <div className="flex gap-2 mb-3">
-            <input
-              value={currentPro}
-              onChange={(e) => setCurrentPro(e.target.value)}
-              disabled={isTimerActive || pros.length >= 5}
-              className="flex-1 px-3 py-2 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none disabled:bg-gray-100"
-              placeholder="Add a pro..."
-              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addPro())}
-            />
-            <button
-              type="button"
-              onClick={addPro}
-              disabled={isTimerActive || !currentPro.trim() || pros.length >= 5}
-              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 transition-colors"
-            >
-              Add
-            </button>
-          </div>
-          <div className="space-y-2">
-            <AnimatePresence>
-              {pros.map((pro, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg"
-                >
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="flex-1">{pro}</span>
-                  {!isTimerActive && (
-                    <button
-                      type="button"
-                      onClick={() => removePro(index)}
-                      className="text-red-500 hover:text-red-700 text-sm"
-                    >
-                      Remove
-                    </button>
-                  )}
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-        </div>
-
-        {/* Cons Section */}
-        <div>
-          <h3 className="text-xl font-semibold text-red-600 mb-3">
-            Cons ({cons.length}/5)
-          </h3>
-          <div className="flex gap-2 mb-3">
-            <input
-              value={currentCon}
-              onChange={(e) => setCurrentCon(e.target.value)}
-              disabled={isTimerActive || cons.length >= 5}
-              className="flex-1 px-3 py-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none disabled:bg-gray-100"
-              placeholder="Add a con..."
-              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCon())}
-            />
-            <button
-              type="button"
-              onClick={addCon}
-              disabled={isTimerActive || !currentCon.trim() || cons.length >= 5}
-              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 transition-colors"
-            >
-              Add
-            </button>
-          </div>
-          <div className="space-y-2">
-            <AnimatePresence>
-              {cons.map((con, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  className="flex items-center gap-3 p-3 bg-red-50 border border-red-200 rounded-lg"
-                >
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <span className="flex-1">{con}</span>
-                  {!isTimerActive && (
-                    <button
-                      type="button"
-                      onClick={() => removeCon(index)}
-                      className="text-red-500 hover:text-red-700 text-sm"
-                    >
-                      Remove
-                    </button>
-                  )}
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-        </div>
-
-        {/* Timer Selection */}
-        {!isTimerActive && (
-          <div>
-            <label className="block text-lg font-semibold mb-2">
-              Decision Timer
-            </label>
-            <select
-              {...register('timerMinutes')}
-              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-            >
-              <option value={5}>5 minutes</option>
-              <option value={10}>10 minutes</option>
-              <option value={15}>15 minutes</option>
-            </select>
-          </div>
-        )}
-
-        {/* Start Button */}
-        {!isTimerActive && (
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-4 rounded-lg text-xl font-semibold hover:bg-blue-700 transition-colors"
-          >
-            Start Decision Timer
-          </button>
-        )}
-      </form>
+    <div className="space-y-6">
+      <ProgressIndicator currentStep={currentStep} />
+      <DecisionForm 
+        onSubmit={startTimer}
+        pros={pros}
+        cons={cons}
+        currentPro={currentPro}
+        currentCon={currentCon}
+        starredPro={starredPro}
+        starredCon={starredCon}
+        validationError={validationError}
+        isLoading={isLoading}
+        onProChange={setCurrentPro}
+        onConChange={setCurrentCon}
+        onAddPro={addPro}
+        onAddCon={addCon}
+        onRemovePro={removePro}
+        onRemoveCon={removeCon}
+        onStarPro={setStarredPro}
+        onStarCon={setStarredCon}
+        isTimerActive={isTimerActive}
+      />
     </div>
   )
 }
