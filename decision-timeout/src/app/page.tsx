@@ -1,12 +1,15 @@
 import { currentUser } from '@clerk/nextjs/server'
+import { isClerkEnabled } from '@/lib/clerk'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 
 export default async function Home() {
-  const user = await currentUser()
-
-  if (user) {
-    redirect('/dashboard')
+  let user: any = null
+  if (isClerkEnabled()) {
+    user = await currentUser()
+    if (user) {
+      redirect('/dashboard')
+    }
   }
 
   return (

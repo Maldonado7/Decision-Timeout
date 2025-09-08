@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from '@clerk/nextjs'
+import { isClerkEnabled } from '@/lib/clerk'
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import "./globals.css";
 
@@ -89,8 +90,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <ClerkProvider>
+  const clerkEnabled = isClerkEnabled()
+
+  const content = (
       <html lang="en">
         <head>
           <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
@@ -121,6 +123,11 @@ export default function RootLayout({
           </ErrorBoundary>
         </body>
       </html>
+  )
+
+  return clerkEnabled ? (
+    <ClerkProvider>
+      {content}
     </ClerkProvider>
-  );
+  ) : content;
 }

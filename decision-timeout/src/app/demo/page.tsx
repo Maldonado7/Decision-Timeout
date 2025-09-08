@@ -1,12 +1,16 @@
 import { currentUser } from '@clerk/nextjs/server'
+import { isClerkEnabled } from '@/lib/clerk'
 import { UserButton } from '@clerk/nextjs'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import MockDecisionCreator from '@/components/demo/MockDecisionCreator'
 
 export default async function DemoPage() {
-  const user = await currentUser()
+  if (!isClerkEnabled()) {
+    redirect('/')
+  }
 
+  const user = await currentUser()
   if (!user) {
     redirect('/sign-in')
   }
