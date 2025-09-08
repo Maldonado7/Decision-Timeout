@@ -1,128 +1,296 @@
-import { currentUser } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
+'use client'
+
+import { useUser } from '@clerk/nextjs'
 import Link from 'next/link'
+import { useState, useEffect } from 'react'
 
-export const dynamic = 'force-dynamic'
+export default function Home() {
+  const { user } = useUser()
+  const [timeLeft, setTimeLeft] = useState(300)
+  const [isRunning, setIsRunning] = useState(false)
 
-export default async function Home() {
-  const user = await currentUser()
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    if (isRunning && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft((prev) => prev - 1)
+      }, 1000)
+    }
+    return () => clearInterval(interval)
+  }, [isRunning, timeLeft])
 
-  if (user) {
-    redirect('/dashboard')
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto">
-          <div className="relative z-10 pb-8 bg-transparent sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
-            <main className="mt-8 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
-              <div className="text-center lg:text-left">
-                <h1 className="text-3xl tracking-tight font-extrabold text-gray-900 sm:text-4xl md:text-5xl lg:text-6xl">
-                  <span className="block">Decision</span>
-                  <span className="block text-blue-600">Timeout</span>
-                </h1>
-                <p className="mt-4 text-lg text-gray-500 sm:mt-5 sm:text-xl sm:max-w-xl sm:mx-auto md:mt-5 lg:mx-0 lg:text-xl leading-relaxed">
-                  Stop overthinking. Make decisions fast. Combat analysis paralysis with forced time limits that auto-decide when you can&apos;t.
-                </p>
-                <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
-                  <div className="rounded-md shadow">
-                    <Link
-                      href="/sign-in"
-                      className="w-full flex items-center justify-center px-8 py-4 min-h-[48px] border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors touch-manipulation md:py-4 md:text-lg md:px-10"
-                    >
-                      Start Making Decisions
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </main>
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="px-6 py-5 border-b border-gray-200">
+        <div className="max-w-6xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-black rounded flex items-center justify-center">
+              <span className="text-white font-bold text-xs">DT</span>
+            </div>
+            <span className="font-semibold text-lg">Decision Timeout</span>
+          </div>
+          
+          <nav className="hidden md:flex items-center gap-8">
+            <a href="#how" className="text-gray-600 hover:text-black">How it works</a>
+            <a href="#pricing" className="text-gray-600 hover:text-black">Pricing</a>
+            <a href="#faq" className="text-gray-600 hover:text-black">FAQ</a>
+            {user ? (
+              <Link href="/dashboard" className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800">
+                Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link href="/sign-in" className="text-gray-600 hover:text-black">Log in</Link>
+                <Link href="/sign-up" className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800">
+                  Try free
+                </Link>
+              </>
+            )}
+          </nav>
+        </div>
+      </header>
+
+      {/* Hero */}
+      <section className="px-6 py-24 text-center">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-5xl md:text-6xl font-bold mb-6">
+            Make decisions<br/>
+            <span className="text-gray-500">without the paralysis</span>
+          </h1>
+          <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
+            Stop overthinking. Set a timer, evaluate options, and commit. A simple tool for decisive action.
+          </p>
+          
+          <div className="flex justify-center gap-4 mb-6">
+            <Link href={user ? "/new-decision" : "/sign-up"} className="px-6 py-3 bg-black text-white rounded-md hover:bg-gray-800">
+              Start deciding now →
+            </Link>
+            <button 
+              onClick={() => setIsRunning(!isRunning)}
+              className="px-6 py-3 border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Try demo
+            </button>
+          </div>
+          
+          <div className="flex justify-center gap-4 text-sm text-gray-500">
+            <span>✓ Free to start</span>
+            <span>✓ No signup required for demo</span>
+            <span>✓ 2-minute setup</span>
           </div>
         </div>
-        <div className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
-          <div className="h-48 w-full bg-gradient-to-r from-blue-400 to-blue-600 sm:h-64 md:h-80 lg:w-full lg:h-full flex items-center justify-center">
-            <div className="text-white text-center p-6 sm:p-8">
-              <div className="text-5xl sm:text-6xl font-bold mb-3 sm:mb-4">⏰</div>
-              <div className="text-xl sm:text-2xl font-semibold">5:00</div>
-              <div className="text-base sm:text-lg opacity-75">Time to decide</div>
+      </section>
+
+      {/* Demo */}
+      <section id="demo" className="px-6 pb-24">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-slate-900 text-white rounded-xl p-8">
+            <div className="flex justify-between mb-6">
+              <div>
+                <h3 className="text-lg font-medium">Should I accept this job offer?</h3>
+                <span className="text-sm text-gray-400">High stakes</span>
+              </div>
+              <div className="text-right">
+                <div className="text-3xl font-mono font-bold">{formatTime(timeLeft)}</div>
+              </div>
+            </div>
+            
+            <div className="h-2 bg-gray-700 rounded-full mb-8">
+              <div 
+                className="h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 rounded-full transition-all"
+                style={{ width: `${((300 - timeLeft) / 300) * 100}%` }}
+              />
+            </div>
+            
+            <div className="grid md:grid-cols-2 gap-8 mb-8">
+              <div>
+                <h4 className="text-green-400 font-medium mb-3">Pros</h4>
+                <ul className="space-y-2 text-gray-300">
+                  <li>• 30% salary increase</li>
+                  <li>• Remote work flexibility</li>
+                  <li>• Better growth opportunities</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 className="text-red-400 font-medium mb-3">Cons</h4>
+                <ul className="space-y-2 text-gray-300">
+                  <li>• Longer commute</li>
+                  <li>• Unknown team culture</li>
+                  <li>• Less PTO initially</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <button className="py-3 bg-green-600 hover:bg-green-700 rounded-lg font-medium">
+                Accept Offer
+              </button>
+              <button className="py-3 bg-red-600 hover:bg-red-700 rounded-lg font-medium">
+                Decline Offer
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Features Section */}
-      <div className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="lg:text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-              How It Works
-            </h2>
-            <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
-              Three simple steps to overcome analysis paralysis
-            </p>
-          </div>
-
-          <div className="mt-12">
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="text-center">
-                <div className="flex items-center justify-center h-16 w-16 rounded-md bg-blue-500 text-white mx-auto text-2xl font-bold">
-                  1
-                </div>
-                <h3 className="mt-4 text-xl font-medium text-gray-900">Create Decision</h3>
-                <p className="mt-2 text-gray-500">
-                  Enter your question, add pros and cons (max 5 each), set a timer (5-15 minutes)
-                </p>
-              </div>
-
-              <div className="text-center">
-                <div className="flex items-center justify-center h-16 w-16 rounded-md bg-green-500 text-white mx-auto text-2xl font-bold">
-                  2
-                </div>
-                <h3 className="mt-4 text-xl font-medium text-gray-900">Timer Countdown</h3>
-                <p className="mt-2 text-gray-500">
-                  Watch the timer count down. When it hits zero, the decision is made automatically
-                </p>
-              </div>
-
-              <div className="text-center">
-                <div className="flex items-center justify-center h-16 w-16 rounded-md bg-purple-500 text-white mx-auto text-2xl font-bold">
-                  3
-                </div>
-                <h3 className="mt-4 text-xl font-medium text-gray-900">Locked Result</h3>
-                <p className="mt-2 text-gray-500">
-                  Decision is locked for 30 days. Track your success rate and time saved
-                </p>
-              </div>
+      {/* How it works */}
+      <section id="how" className="px-6 py-24 bg-gray-50">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-4">Three simple steps</h2>
+          <p className="text-center text-gray-600 mb-12">From paralysis to decision in minutes</p>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center mx-auto mb-4 font-bold">1</div>
+              <h3 className="font-semibold mb-2">Frame your decision</h3>
+              <p className="text-sm text-gray-600">Define what you're deciding, list your options, and identify pros and cons for each choice.</p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center mx-auto mb-4 font-bold">2</div>
+              <h3 className="font-semibold mb-2">Set your timer</h3>
+              <p className="text-sm text-gray-600">Choose how much time you need. The countdown creates urgency and prevents endless deliberation.</p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center mx-auto mb-4 font-bold">3</div>
+              <h3 className="font-semibold mb-2">Commit and move on</h3>
+              <p className="text-sm text-gray-600">When time's up, make your choice. Save it to review later and learn from your decisions.</p>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Stats Section */}
-      <div className="bg-blue-50 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900">
-              Stop Wasting Time on Decisions
-            </h2>
-            <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-blue-600">47h</div>
-                <div className="text-lg text-gray-600">Average time saved per month</div>
+      {/* Pricing */}
+      <section id="pricing" className="px-6 py-24">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-4">Simple, transparent pricing</h2>
+          <p className="text-center text-gray-600 mb-12">Start free, upgrade when you need more</p>
+          
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="border border-gray-200 rounded-xl p-8">
+              <h3 className="text-xl font-bold mb-2">Free</h3>
+              <div className="text-3xl font-bold mb-6">$0</div>
+              <ul className="space-y-3 mb-8 text-gray-600">
+                <li>✓ 5 decisions per month</li>
+                <li>✓ Basic timer features</li>
+                <li>✓ Decision history (7 days)</li>
+                <li>✓ No credit card required</li>
+              </ul>
+              <Link href={user ? "/dashboard" : "/sign-up"} className="block text-center py-3 border border-gray-300 rounded-lg hover:bg-gray-50">
+                {user ? "Go to Dashboard" : "Start free"}
+              </Link>
+            </div>
+            
+            <div className="border-2 border-black rounded-xl p-8 relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-500 text-white px-3 py-1 rounded-full text-sm">
+                Most popular
               </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-green-600">85%</div>
-                <div className="text-lg text-gray-600">Decisions rated as good</div>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl font-bold text-purple-600">30</div>
-                <div className="text-lg text-gray-600">Days decision lock period</div>
-              </div>
+              <h3 className="text-xl font-bold mb-2">Pro</h3>
+              <div className="text-3xl font-bold mb-6">$9<span className="text-lg font-normal text-gray-600">/mo</span></div>
+              <ul className="space-y-3 mb-8 text-gray-600">
+                <li>✓ Unlimited decisions</li>
+                <li>✓ Full decision history</li>
+                <li>✓ Analytics & insights</li>
+                <li>✓ Export your data</li>
+                <li>✓ Priority support</li>
+              </ul>
+              <Link href={user ? "/pricing" : "/sign-up"} className="block text-center py-3 bg-black text-white rounded-lg hover:bg-gray-800">
+                {user ? "Upgrade to Pro" : "Start 14-day free trial"}
+              </Link>
             </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="px-6 py-24 bg-gray-50">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-12">Frequently asked questions</h2>
+          
+          <div className="space-y-4">
+            <details className="bg-white rounded-lg p-6">
+              <summary className="font-medium cursor-pointer">How does the decision timer work?</summary>
+              <p className="mt-4 text-gray-600">
+                Set a timer between 2-30 minutes. The countdown creates healthy pressure that helps you focus on what matters and prevents endless overthinking. When time's up, you commit to your choice.
+              </p>
+            </details>
+            
+            <details className="bg-white rounded-lg p-6">
+              <summary className="font-medium cursor-pointer">Is there really a free plan?</summary>
+              <p className="mt-4 text-gray-600">
+                Yes! The free plan includes 5 decisions per month with basic timer features. No credit card required. Perfect for trying the tool or occasional decision-making.
+              </p>
+            </details>
+            
+            <details className="bg-white rounded-lg p-6">
+              <summary className="font-medium cursor-pointer">Can I export my decision history?</summary>
+              <p className="mt-4 text-gray-600">
+                Pro users can export their complete decision history as CSV or JSON files. This includes all decisions, pros/cons, timestamps, and outcomes for your personal analysis.
+              </p>
+            </details>
+            
+            <details className="bg-white rounded-lg p-6">
+              <summary className="font-medium cursor-pointer">What if I need more time?</summary>
+              <p className="mt-4 text-gray-600">
+                You can pause the timer once per decision for up to 5 minutes. This gives you flexibility while maintaining the core principle of time-boxed decision-making.
+              </p>
+            </details>
+            
+            <details className="bg-white rounded-lg p-6">
+              <summary className="font-medium cursor-pointer">Can I change my plan anytime?</summary>
+              <p className="mt-4 text-gray-600">
+                Absolutely. Upgrade, downgrade, or cancel anytime. No long-term contracts or hidden fees. Changes take effect at your next billing cycle.
+              </p>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="px-6 py-24 bg-black text-white text-center">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-4xl font-bold mb-4">Stop overthinking. Start deciding.</h2>
+          <p className="text-xl text-gray-400 mb-8">Join thousands who've broken free from analysis paralysis</p>
+          <div className="flex justify-center gap-4">
+            <Link href={user ? "/new-decision" : "/sign-up"} className="px-6 py-3 bg-white text-black rounded-md hover:bg-gray-100">
+              Start free trial →
+            </Link>
+            <button 
+              onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })}
+              className="px-6 py-3 border border-gray-700 rounded-md hover:border-gray-600"
+            >
+              Try demo first
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Simple Footer */}
+      <footer className="px-6 py-8 border-t border-gray-200">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-black rounded flex items-center justify-center">
+              <span className="text-white font-bold text-xs">DT</span>
+            </div>
+            <span className="text-sm text-gray-600">© 2024 Decision Timeout</span>
+          </div>
+          
+          <div className="flex gap-6 text-sm text-gray-600">
+            <Link href="/privacy" className="hover:text-black">Privacy</Link>
+            <Link href="/terms" className="hover:text-black">Terms</Link>
+            <Link href="/contact" className="hover:text-black">Contact</Link>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

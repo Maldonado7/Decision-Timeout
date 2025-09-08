@@ -13,11 +13,19 @@ export default function PWAInstallPrompt() {
   const [isVisible, setIsVisible] = useState(false)
   const [isInstalled, setIsInstalled] = useState(false)
   const [isIOS, setIsIOS] = useState(false)
+  const [hasMounted, setHasMounted] = useState(false)
 
   useEffect(() => {
+    setHasMounted(true)
+    
     // Check if already installed
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstalled(true)
+      return
+    }
+
+    // Check if dismissed this session
+    if (sessionStorage.getItem('pwa-prompt-dismissed')) {
       return
     }
 
@@ -82,8 +90,8 @@ export default function PWAInstallPrompt() {
     sessionStorage.setItem('pwa-prompt-dismissed', 'true')
   }
 
-  // Don't show if already installed or dismissed this session
-  if (isInstalled || sessionStorage.getItem('pwa-prompt-dismissed')) {
+  // Don't render anything until client-side hydration is complete
+  if (!hasMounted || isInstalled) {
     return null
   }
 

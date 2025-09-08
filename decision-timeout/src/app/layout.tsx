@@ -19,12 +19,18 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Decision Timeout",
   description: "Stop overthinking. Make decisions fast.",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes",
-  themeColor: "#2563EB",
   manifest: "/manifest.json",
   icons: {
     icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzI1NjNFQiIvPgo8dGV4dCB4PSIxNiIgeT0iMjIiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjE4IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPuKPsOKPuTwvdGV4dD4KPHN2Zz4='
   }
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: '#2563EB',
 };
 
 export default function RootLayout({

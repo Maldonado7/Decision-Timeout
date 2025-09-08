@@ -1,4 +1,10 @@
 import type { NextConfig } from "next";
+const withPWA = require('next-pwa')({
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development'
+})
 
 const nextConfig: NextConfig = {
   // Performance optimizations for mobile
@@ -60,9 +66,11 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
       allowedOrigins: [
+        'localhost:3000',
         'localhost:3001',
         'localhost:3002', 
         'localhost:3003',
+        'glowing-couscous-rqq4vr4r5gx2p44j-3000.app.github.dev',
         'glowing-couscous-rqq4vr4r5gx2p44j-3001.app.github.dev',
         'glowing-couscous-rqq4vr4r5gx2p44j-3002.app.github.dev',
         'glowing-couscous-rqq4vr4r5gx2p44j-3003.app.github.dev',
@@ -103,4 +111,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withPWA(nextConfig);
