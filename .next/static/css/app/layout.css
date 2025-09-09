@@ -1,0 +1,328 @@
+/*!*****************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./src/app/globals.css ***!
+  \*****************************************************************************************************************************************************************************************************************************************************************/
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+  text-size-adjust: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  -webkit-tap-highlight-color: rgba(37, 99, 235, 0.2);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Improve touch targets and scrolling */
+button, a, input, textarea, select {
+  touch-action: manipulation;
+  /* Prevent ghost clicks on mobile */
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: rgba(37, 99, 235, 0.2);
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Improve focus indicators for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* Ensure proper touch targets on mobile */
+@media (max-width: 768px) {
+  button:not([class*="min-h-"]):not([class*="h-"]) {
+    min-height: 44px;
+    padding: 12px 16px;
+  }
+  
+  a:not([class*="min-h-"]):not([class*="h-"]) {
+    min-height: 44px;
+    padding: 12px 16px;
+  }
+  
+  input:not([class*="min-h-"]):not([class*="h-"]),
+  textarea:not([class*="min-h-"]):not([class*="h-"]),
+  select:not([class*="min-h-"]):not([class*="h-"]) {
+    min-height: 44px;
+    padding: 12px 16px;
+  }
+  
+  /* Improve readability on small screens */
+  body {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  
+  /* Prevent zoom on input focus on iOS and improve touch targets */
+  input[type="text"],
+  input[type="email"],
+  input[type="number"],
+  input[type="password"],
+  textarea,
+  select {
+    font-size: 16px !important;
+    min-height: 48px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    -webkit-appearance: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Enhanced textarea for mobile */
+  textarea {
+    min-height: 100px;
+    resize: vertical;
+    line-height: 1.5;
+  }
+  
+  /* Better spacing for mobile */
+  .container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* Improve mobile scrolling performance */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Better focus states for mobile */
+@media (max-width: 768px) {
+  *:focus-visible {
+    outline: 3px solid #2563eb;
+    outline-offset: 2px;
+  }
+}
+
+/* Bottom sheet for mobile */
+.bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.1), 0 -4px 10px -2px rgba(0, 0, 0, 0.05);
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  z-index: 50;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: env(safe-area-inset-bottom, 0) 0 0 0;
+}
+
+.bottom-sheet.open {
+  transform: translateY(0);
+}
+
+.bottom-sheet-handle {
+  width: 36px;
+  height: 4px;
+  background-color: #d1d5db;
+  border-radius: 2px;
+  margin: 8px auto 16px;
+  cursor: -webkit-grab;
+  cursor: grab;
+}
+
+.bottom-sheet-handle:active {
+  cursor: -webkit-grabbing;
+  cursor: grabbing;
+}
+
+.bottom-sheet-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  z-index: 40;
+}
+
+.bottom-sheet-overlay.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Hide bottom sheet on desktop */
+@media (min-width: 769px) {
+  .bottom-sheet,
+  .bottom-sheet-overlay {
+    display: none !important;
+  }
+}
+
+/* Handle safe areas for mobile devices with notches */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Touch gesture support */
+.swipe-zone {
+  touch-action: pan-y; /* Allow vertical scrolling but capture horizontal gestures */
+}
+
+.swipe-feedback {
+  position: relative;
+  overflow: hidden;
+}
+
+.swipe-feedback::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+  transition: left 0.3s ease;
+  pointer-events: none;
+}
+
+.swipe-feedback.swiping::before {
+  left: 100%;
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 768px) {
+  /* Improved text selection on mobile */
+  * {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+  }
+  
+  /* Allow text selection for content areas */
+  p, span, div[contenteditable], input, textarea, [role="textbox"] {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    user-select: text;
+  }
+  
+  /* Better mobile scrolling */
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+    overflow-scrolling: touch;
+  }
+  
+  /* Prevent horizontal scroll on small screens */
+  body {
+    overflow-x: hidden;
+  }
+  
+  /* Improve tap highlights */
+  button, a, [role="button"], [tabindex]:not([tabindex="-1"]) {
+    -webkit-tap-highlight-color: rgba(37, 99, 235, 0.3);
+  }
+  
+  /* Hide scrollbars on mobile for cleaner look */
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Improve mobile animation performance */
+  .mobile-optimized {
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: transform;
+  }
+  
+  /* Better mobile modal/overlay handling */
+  .mobile-modal-open {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+}
+
+/* PWA display mode optimizations */
+@media all and (display-mode: standalone) {
+  body {
+    /* Remove any default margins when in PWA mode */
+    margin: 0;
+    /* Ensure full coverage of the screen */
+    min-height: 100vh;
+  }
+  
+  /* Adjust navigation for PWA mode */
+  nav {
+    position: -webkit-sticky;
+    position: sticky;
+    top: env(safe-area-inset-top, 0);
+  }
+}
+
+/* High contrast mode support for accessibility */
+@media (prefers-contrast: high) {
+  button {
+    border: 2px solid currentColor;
+  }
+  
+  input, textarea, select {
+    border: 2px solid #000;
+    background: #fff;
+  }
+}
+
+/* Reduce motion for users with vestibular motion disorders */
+@media (prefers-reduced-motion: reduce) {
+  .timer-pulse, [class*="animate-pulse"] {
+    animation: none;
+  }
+  
+  .timer-wobble, [class*="animate-bounce"] {
+    animation: none;
+  }
+}
+
