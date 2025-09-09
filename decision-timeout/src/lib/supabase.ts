@@ -16,4 +16,5 @@ export type Decision = {
   locked_until: string
   outcome: 'good' | 'bad' | 'pending'
   time_saved: number
+  confidence_level?: number
 }

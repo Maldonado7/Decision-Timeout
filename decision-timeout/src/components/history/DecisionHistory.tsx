@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useAuth } from '@clerk/nextjs'
 import { supabase, Decision } from '@/lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -9,8 +8,7 @@ export default function DecisionHistory() {
   const { userId } = useAuth()
   const [decisions, setDecisions] = useState<Decision[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<'all' | 'good' | 'bad' | 'pending'>('all')
-  const [searchTerm, setSearchTerm] = useState('')
+  const [error, setError] = useState<string | null>(null)
   const [stats, setStats] = useState({
     totalDecisions: 0,
     totalTimeSaved: 0,
@@ -22,10 +20,12 @@ export default function DecisionHistory() {
     mostRecentDecision: null as Date | null
   })
 
-  const fetchDecisions = useCallback(async () => {
-    if (!userId) return
-    
+
+  const fetchDecisionsCallback = useCallback(async () => {
     try {
+      setError(null)
+      console.log('Fetching decisions for user:', userId)
+      
       const { data, error } = await supabase
         .from('decisions')
         .select('*')
@@ -34,18 +34,27 @@ export default function DecisionHistory() {
 
       if (error) throw error
 
+      console.log('Fetched decisions data:', data)
+      console.log('Number of decisions found:', data?.length || 0)
+
       setDecisions(data || [])
       calculateStats(data || [])
     } catch (error) {
-      console.error('Error fetching decisions:', error)
+      // For any Supabase error (table not found, permissions, etc.), 
+      // just show empty state instead of error screen
+      console.log('Supabase error detected, showing empty state:', error)
+      
+      setError(null)
+      setDecisions([])
+      calculateStats([])
     } finally {
       setLoading(false)
     }
   }, [userId])
 
   useEffect(() => {
-    fetchDecisions()
-  }, [fetchDecisions])
+    fetchDecisionsCallback()
+  }, [fetchDecisionsCallback])
 
   const calculateStats = (decisions: Decision[]) => {
     const totalDecisions = decisions.length
@@ -79,18 +88,27 @@ export default function DecisionHistory() {
 
       if (error) throw error
       
-      // Optimistic update
-      setDecisions(prev => prev.map(d => 
-        d.id === decisionId ? { ...d, outcome } : d
+      // Optimistically update the UI
+      setDecisions(prev => prev.map(decision => 
+        decision.id === decisionId 
+          ? { ...decision, outcome }
+          : decision
       ))
       
-      // Recalculate stats
-      const updatedDecisions = decisions.map(d => 
-        d.id === decisionId ? { ...d, outcome } : d
+      // Recalculate stats with updated data
+      const updatedDecisions = decisions.map(decision => 
+        decision.id === decisionId 
+          ? { ...decision, outcome }
+          : decision
       )
       calculateStats(updatedDecisions)
+      
     } catch (error) {
       console.error('Error updating decision outcome:', error)
+      setError('Failed to update decision outcome')
+      
+      // Refresh data on error to ensure consistency
+      fetchDecisionsCallback()
     }
   }
 
@@ -146,6 +164,82 @@ export default function DecisionHistory() {
     )
   }
 
+  if (error) {
+    return (
+      <div className="max-w-6xl mx-auto p-6">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+          <div className="text-3xl md:text-4xl mb-4">⚠️</div>
+          <h2 className="text-xl font-semibold text-red-800 mb-2">Error Loading History</h2>
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={() => {
+              setError(null)
+              setLoading(true)
+              fetchDecisionsCallback()
+            }}
+            className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Handle empty state when no decisions exist
+  if (decisions.length === 0 && !loading && !error) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl p-12 text-center border border-white/20"
+        >
+          <div className="text-4xl md:text-6xl mb-4 md:mb-6">🤔</div>
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-4">
+            No Decisions Yet
+          </h2>
+          <p className="text-gray-600 text-lg mb-8 max-w-md mx-auto leading-relaxed">
+            Your decision history will appear here once you start making choices with Decision Timeout. 
+            Ready to beat analysis paralysis?
+          </p>
+          
+          <div className="space-y-4">
+            <motion.a
+              href="/dashboard"
+              className="inline-flex items-center gap-2 md:gap-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 md:px-8 md:py-4 rounded-xl md:rounded-2xl font-semibold text-base md:text-lg shadow-xl hover:shadow-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <span className="text-2xl">🚀</span>
+              Make Your First Decision
+            </motion.a>
+            
+            <motion.a
+              href="/demo"
+              className="inline-flex items-center gap-2 md:gap-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-6 py-3 md:px-8 md:py-4 rounded-xl md:rounded-2xl font-semibold text-base md:text-lg shadow-xl hover:shadow-2xl hover:from-yellow-600 hover:to-orange-600 transition-all duration-300"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <span className="text-2xl">🛠️</span>
+              Try Demo Mode
+            </motion.a>
+          </div>
+          
+          <div className="mt-8 space-y-3">
+            <div className="text-sm text-gray-500 bg-gray-50 rounded-lg p-4">
+              💡 Tip: Each decision you make will be tracked here with outcomes, time saved, and success patterns
+            </div>
+            
+            <div className="text-sm text-yellow-700 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+              🚧 If decisions aren&apos;t saving, you may need to run the database setup script. Check QUICK_FIX_README.md for instructions.
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Stats Cards */}
@@ -155,7 +249,7 @@ export default function DecisionHistory() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 text-center"
         >
-          <div className="text-2xl sm:text-3xl font-bold text-blue-600 mb-2">
+          <div className="text-2xl md:text-3xl font-bold text-blue-600 mb-2">
             {stats.totalDecisions}
           </div>
           <div className="text-xs sm:text-sm text-gray-600">Total Decisions</div>
@@ -167,8 +261,8 @@ export default function DecisionHistory() {
           transition={{ delay: 0.1 }}
           className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 text-center"
         >
-          <div className="text-2xl sm:text-3xl font-bold text-green-600 mb-2">
-            {stats.successRate}%
+          <div className="text-2xl md:text-3xl font-bold text-green-600 mb-2">
+            {Math.round(stats.totalTimeSaved / 60)}h
           </div>
           <div className="text-xs sm:text-sm text-gray-600">Success Rate</div>
         </motion.div>
@@ -179,8 +273,8 @@ export default function DecisionHistory() {
           transition={{ delay: 0.2 }}
           className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 text-center"
         >
-          <div className="text-2xl sm:text-3xl font-bold text-purple-600 mb-2">
-            {Math.round(stats.totalTimeSaved / 60)}h
+          <div className="text-2xl md:text-3xl font-bold text-purple-600 mb-2">
+            {stats.successRate}%
           </div>
           <div className="text-xs sm:text-sm text-gray-600">Time Saved</div>
         </motion.div>
